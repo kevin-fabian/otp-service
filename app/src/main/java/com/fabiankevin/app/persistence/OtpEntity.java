@@ -1,0 +1,84 @@
+package com.fabiankevin.app.persistence;
+
+import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.enums.DeliveryMethod;
+import com.fabiankevin.app.models.enums.OtpPurpose;
+import com.fabiankevin.app.models.enums.OtpStatus;
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Data
+@Entity(name = "otps")
+@Table(name = "otps", indexes = {
+        @Index(name = "otps_otp_code_idx", columnList = "otp_code"),
+        @Index(name = "otps_user_identifier_idx", columnList = "user_identifier")
+})
+public class OtpEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
+
+    @Column(name = "otp_code", nullable = false)
+    private String otpCode;
+
+    @Column(name = "user_identifier", nullable = false)
+    private String userIdentifier;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "purpose", nullable = false)
+    private OtpPurpose purpose;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private OtpStatus status;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_method", nullable = false)
+    private DeliveryMethod deliveryMethod;
+
+    @Column(name = "attempt_count")
+    private int attemptCount;
+
+    @Column(name = "metadata")
+    private String metadata;
+
+    public Otp toModel() {
+        return Otp.builder()
+                .id(id)
+                .otpCode(otpCode)
+                .userIdentifier(userIdentifier)
+                .purpose(purpose)
+                .status(status)
+                .createdAt(createdAt)
+                .expiresAt(expiresAt)
+                .deliveryMethod(deliveryMethod)
+                .attemptCount(attemptCount)
+                .metadata(metadata)
+                .build();
+    }
+
+    public static OtpEntity fromModel(Otp otp) {
+        OtpEntity entity = new OtpEntity();
+        entity.setId(otp.getId());
+        entity.setOtpCode(otp.getOtpCode());
+        entity.setUserIdentifier(otp.getUserIdentifier());
+        entity.setPurpose(otp.getPurpose());
+        entity.setStatus(otp.getStatus());
+        entity.setCreatedAt(otp.getCreatedAt());
+        entity.setExpiresAt(otp.getExpiresAt());
+        entity.setDeliveryMethod(otp.getDeliveryMethod());
+        entity.setAttemptCount(otp.getAttemptCount());
+        entity.setMetadata(otp.getMetadata());
+        return entity;
+    }
+}
