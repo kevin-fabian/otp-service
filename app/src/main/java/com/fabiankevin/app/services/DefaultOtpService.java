@@ -32,7 +32,6 @@ public class DefaultOtpService implements OtpService {
                 .userIdentifier(userIdentifier)
                 .attemptCount(0)
                 .deliveryMethod(command.deliveryMethod())
-                .deliveryTarget(command.deliveryTarget())
                 .createdAt(now)
                 .expiresAt(now.plusMinutes(expiresInMinutes))
                 .purpose(command.purpose())
