@@ -1,23 +1,27 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpRepository;
+import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class DefaultOtpServiceTest {
     private final OtpRepository otpRepository = mock(OtpRepository.class);
     private final OtpClient otpClient = mock(OtpClient.class);
     private final OtpGenerator otpGenerator = mock(OtpGenerator.class);
-    private final OtpService otpService = new DefaultOtpService(otpRepository, otpClient, otpGenerator);
+    private final OtpProperties otpProperties = mock(OtpProperties.class);
+    private final OtpService otpService = new DefaultOtpService(otpRepository, otpClient, otpGenerator, otpProperties);
 
     private GenerateOtpCommand mockedCommand;
 
@@ -28,12 +32,38 @@ class DefaultOtpServiceTest {
                 .deliveryMethod(DeliveryMethod.SMS)
                 .userIdentifier("test@test.com")
                 .status(OtpStatus.ACTIVE)
+                .metadata("{}")
                 .build();
+        when(otpProperties.getOtpLength()).thenReturn(6);
+        when(otpProperties.getExpiresInMinutes()).thenReturn(1);
     }
 
     @Test
     void generate_givenValidCommand_thenShouldSucceed() {
         when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
         otpService.generate(mockedCommand);
+
+        ArgumentCaptor<Otp> otpArgumentCaptor = ArgumentCaptor.forClass(Otp.class);
+        verify(otpRepository, times(1)).saveAndFlush(otpArgumentCaptor.capture());
+        Otp otpArgumentCaptorValue = otpArgumentCaptor.getValue();
+
+        // Assertions for the Otp object
+        assertEquals("123456", otpArgumentCaptorValue.otpCode(), "OTP code should match generated code");
+        assertEquals(mockedCommand.userIdentifier(), otpArgumentCaptorValue.userIdentifier(), "User identifier should match command");
+        assertEquals(mockedCommand.purpose(), otpArgumentCaptorValue.purpose(), "Purpose should match command");
+        assertEquals(mockedCommand.status(), otpArgumentCaptorValue.status(), "Status should match command");
+        assertEquals(mockedCommand.deliveryMethod(), otpArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
+        assertEquals(0, otpArgumentCaptorValue.attemptCount(), "Attempt count should be 0");
+        assertNotNull(otpArgumentCaptorValue.createdAt(), "Created at should not be null");
+        assertNotNull(otpArgumentCaptorValue.expiresAt(), "Expires at should not be null");
+        assertEquals(
+                otpArgumentCaptorValue.createdAt().plusMinutes(otpProperties.getExpiresInMinutes()),
+                otpArgumentCaptorValue.expiresAt(),
+                "Expires at should be created at plus expiration minutes"
+        );
+        assertNull(otpArgumentCaptorValue.id(), "ID should not be null");
+        assertEquals("{}", otpArgumentCaptorValue.metadata(), "Metadata should not be null");
+
+        verify(otpClient, times(1)).send(any());
     }
 }

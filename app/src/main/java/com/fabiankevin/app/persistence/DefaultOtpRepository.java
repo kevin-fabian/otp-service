@@ -14,7 +14,7 @@ public class DefaultOtpRepository implements OtpRepository {
     private final JpaOtpRepository jpaOtpRepository;
 
     @Override
-    public Otp save(Otp otp) {
+    public Otp saveAndFlush(Otp otp) {
         OtpEntity entity = OtpEntity.fromModel(otp);
         return jpaOtpRepository.save(entity).toModel();
     }
