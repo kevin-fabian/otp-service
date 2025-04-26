@@ -2,7 +2,9 @@ package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.ActiveOtpException;
+import com.fabiankevin.app.exceptions.UnsupportedDeliveryMethodException;
 import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.properties.OtpProperties;
@@ -11,12 +13,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Transactional
 public class DefaultOtpService implements OtpService {
     private final OtpRepository otpRepository;
-    private final OtpClient client;
+    private final Map<DeliveryMethod, OtpClient> otpClientMap;
     private final OtpGenerator otpGenerator;
     private final OtpProperties properties;
 
@@ -42,7 +46,9 @@ public class DefaultOtpService implements OtpService {
                 .build();
 
         Otp savedOtp = otpRepository.saveAndFlush(otp);
-        client.send(savedOtp);
+
+        Optional.ofNullable(otpClientMap.get(savedOtp.deliveryMethod()))
+                        .orElseThrow(() -> new UnsupportedDeliveryMethodException(savedOtp.deliveryMethod()));
 
         return savedOtp;
     }
