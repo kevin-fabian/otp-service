@@ -3,6 +3,7 @@ package com.fabiankevin.app.services;
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.ActiveOtpException;
 import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,11 @@ public class DefaultOtpService implements OtpService {
         }
         LocalDateTime now = LocalDateTime.now();
         String otpCode = otpGenerator.generateCode(otpCodeDigit);
-        Otp otp = command.toModel().toBuilder()
+        Otp otp = Otp.builder()
+                .deliveryMethod(command.deliveryMethod())
+                .purpose(command.purpose())
+                .userIdentifier(command.userIdentifier())
+                .status(OtpStatus.ACTIVE)
                 .otpCode(otpCode)
                 .attemptCount(0)
                 .createdAt(now)

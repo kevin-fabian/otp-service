@@ -69,16 +69,16 @@ public class OtpEntity {
 
     public static OtpEntity fromModel(Otp otp) {
         OtpEntity entity = new OtpEntity();
-        entity.setId(otp.getId());
-        entity.setOtpCode(otp.getOtpCode());
-        entity.setUserIdentifier(otp.getUserIdentifier());
-        entity.setPurpose(otp.getPurpose());
-        entity.setStatus(otp.getStatus());
-        entity.setCreatedAt(otp.getCreatedAt());
-        entity.setExpiresAt(otp.getExpiresAt());
-        entity.setDeliveryMethod(otp.getDeliveryMethod());
-        entity.setAttemptCount(otp.getAttemptCount());
-        entity.setMetadata(otp.getMetadata());
+        entity.setId(otp.id());
+        entity.setOtpCode(otp.otpCode());
+        entity.setUserIdentifier(otp.userIdentifier());
+        entity.setPurpose(otp.purpose());
+        entity.setStatus(otp.status());
+        entity.setCreatedAt(otp.createdAt());
+        entity.setExpiresAt(otp.expiresAt());
+        entity.setDeliveryMethod(otp.deliveryMethod());
+        entity.setAttemptCount(otp.attemptCount());
+        entity.setMetadata(otp.metadata());
         return entity;
     }
 }
