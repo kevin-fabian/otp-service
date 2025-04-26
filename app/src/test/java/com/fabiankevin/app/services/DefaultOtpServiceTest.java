@@ -46,7 +46,6 @@ class DefaultOtpServiceTest {
     @Test
     void generate_givenValidCommand_thenShouldSucceed() {
         when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
-//        when(otpRepository.saveAndFlush(any())).thenReturn(O)
         otpService.generate(mockedCommand);
 
         ArgumentCaptor<Otp> otpArgumentCaptor = ArgumentCaptor.forClass(Otp.class);
@@ -70,6 +69,7 @@ class DefaultOtpServiceTest {
         assertNull(otpArgumentCaptorValue.id(), "ID should not be null");
         assertEquals("{}", otpArgumentCaptorValue.metadata(), "Metadata should not be null");
 
+        verify(otpRepository, times(1)).existByUserIdentifierAndStatusActive(mockedCommand.userIdentifier());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }

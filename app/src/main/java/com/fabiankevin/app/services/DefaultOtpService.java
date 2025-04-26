@@ -47,8 +47,9 @@ public class DefaultOtpService implements OtpService {
 
         Otp savedOtp = otpRepository.saveAndFlush(otp);
 
-        Optional.ofNullable(otpClientMap.get(savedOtp.deliveryMethod()))
-                        .orElseThrow(() -> new UnsupportedDeliveryMethodException(savedOtp.deliveryMethod()));
+        Optional.ofNullable(otpClientMap.get(otp.deliveryMethod()))
+                .orElseThrow(() -> new UnsupportedDeliveryMethodException(otp.deliveryMethod()))
+                .send(savedOtp);
 
         return savedOtp;
     }
