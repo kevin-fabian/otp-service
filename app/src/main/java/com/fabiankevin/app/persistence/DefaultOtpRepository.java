@@ -1,6 +1,7 @@
 package com.fabiankevin.app.persistence;
 
 import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -27,6 +28,6 @@ public class DefaultOtpRepository implements OtpRepository {
 
     @Override
     public boolean existByUserIdentifierAndStatusActive(String userIdentifier) {
-        return jpaOtpRepository.existByUserIdentifierAndStatusActive(userIdentifier);
+        return jpaOtpRepository.existsByUserIdentifierAndStatus(userIdentifier, OtpStatus.ACTIVE);
     }
 }
