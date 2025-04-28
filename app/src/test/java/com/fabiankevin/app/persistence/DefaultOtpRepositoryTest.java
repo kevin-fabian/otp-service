@@ -59,10 +59,8 @@ class DefaultOtpRepositoryTest {
 
         OtpEntity otpEntity = jpaOtpRepository.findById(savedOtp.id()).get();
 
-        Assertions.assertThat(mockedOtp)
-                .describedAs("should be equal except by id")
+        Assertions.assertThat(savedOtp)
                 .usingRecursiveComparison()
-                .ignoringFields("id")
                 .isEqualTo(otpEntity.toModel());
     }
 
