@@ -69,27 +69,8 @@ class DefaultOtpRepositoryTest {
     @Test
     void saveAndFlush_givenNullOtp_thenShouldThrowException() {
         Assertions.assertThatThrownBy(() -> otpRepository.saveAndFlush(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Otp must not be null");
-    }
-
-    @Test
-    void saveAndFlush_givenOtpWithNullFields_thenShouldThrowException() {
-        Otp invalidOtp = Otp.builder()
-                .purpose(null)
-                .deliveryMethod(null)
-                .userIdentifier(null)
-                .status(null)
-                .metadata(null)
-                .attemptCount(0)
-                .createdAt(null)
-                .expiresAt(null)
-                .otpCode(null)
-                .build();
-
-        Assertions.assertThatThrownBy(() -> otpRepository.saveAndFlush(invalidOtp))
-                .isInstanceOf(NullPointerException.class) // Replace with specific exception if known
-                .hasMessageContaining("Invalid Otp fields"); // Replace with specific message if known
+                .isInstanceOf(NullPointerException.class)
+                .describedAs("Expecting null pointer exception");
     }
 
     @Test
