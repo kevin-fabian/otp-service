@@ -46,7 +46,7 @@ public class OtpEntity {
     @Column(name = "delivery_method", nullable = false)
     private DeliveryMethod deliveryMethod;
 
-    @Column(name = "attempt_count")
+    @Column(name = "attempt_count", nullable = false)
     private int attemptCount;
 
     @Column(name = "metadata")
