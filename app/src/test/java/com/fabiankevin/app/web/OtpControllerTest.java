@@ -5,6 +5,7 @@ import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.services.OtpService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -32,11 +33,12 @@ class OtpControllerTest {
     @MockitoBean
     private OtpService otpService;
 
-    @Test
-    void generateOtp_givenValidRequest_thenShouldReturnOtpCode() throws Exception {
-        OffsetDateTime now = OffsetDateTime.now();
+    private Otp mockedOtp;
 
-        Otp otp = Otp.builder()
+    @BeforeEach
+    public void setup(){
+        OffsetDateTime now = OffsetDateTime.now();
+        mockedOtp = Otp.builder()
                 .id(UUID.randomUUID())
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
@@ -48,8 +50,12 @@ class OtpControllerTest {
                 .expiresAt(now.plusMinutes(1))
                 .otpCode("123456")
                 .build();
+    }
+
+    @Test
+    void generateOtp_givenValidRequest_thenShouldReturnOtpCode() throws Exception {
         when(otpService.generate(any()))
-                .thenReturn(otp);
+                .thenReturn(mockedOtp);
 
         mockMvc.perform(post("/api/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,9 +68,9 @@ class OtpControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(otp.id().toString()))
+                .andExpect(jsonPath("$.id").value(mockedOtp.id().toString()))
                 .andExpect(jsonPath("$.otp_code").value("123456"))
-                .andExpect(jsonPath("$.expired_at").value(otp.expiresAt().format(DEFAULT_CUSTOM_ISO8601_FORMAT)));
+                .andExpect(jsonPath("$.expired_at").value(mockedOtp.expiresAt().format(DEFAULT_CUSTOM_ISO8601_FORMAT)));
 
         verify(otpService, times(1)).generate(any());
     }
