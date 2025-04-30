@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,7 +39,7 @@ class DefaultOtpRepositoryTest {
 
     @BeforeEach
     public void setup(){
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         mockedOtp = Otp.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)

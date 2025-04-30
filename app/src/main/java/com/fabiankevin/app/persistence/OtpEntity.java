@@ -7,7 +7,7 @@ import com.fabiankevin.app.models.enums.OtpStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -37,10 +37,10 @@ public class OtpEntity {
     private OtpStatus status;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    private OffsetDateTime expiresAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_method", nullable = false)

@@ -12,7 +12,7 @@ import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,7 +31,7 @@ public class DefaultOtpService implements OtpService {
         if (otpRepository.existByUserIdentifierAndStatusActive(userIdentifier)) {
             throw new ActiveOtpException(userIdentifier);
         }
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         String otpCode = otpGenerator.generateCode(properties.getOtpLength());
         Otp otp = Otp.builder()
                 .deliveryMethod(command.deliveryMethod())

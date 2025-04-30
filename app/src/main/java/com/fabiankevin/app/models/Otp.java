@@ -5,7 +5,7 @@ import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import lombok.Builder;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -16,8 +16,8 @@ public record Otp(
         String userIdentifier,
         OtpPurpose purpose,
         OtpStatus status,
-        LocalDateTime createdAt,
-        LocalDateTime expiresAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime expiresAt,
         DeliveryMethod deliveryMethod,
         int attemptCount,
         String metadata

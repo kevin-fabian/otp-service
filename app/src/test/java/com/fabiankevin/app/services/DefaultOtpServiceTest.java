@@ -36,7 +36,6 @@ class DefaultOtpServiceTest {
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
                 .userIdentifier("test@test.com")
-                .status(OtpStatus.ACTIVE)
                 .metadata("{}")
                 .build();
         when(otpProperties.getOtpLength()).thenReturn(6);
@@ -56,7 +55,7 @@ class DefaultOtpServiceTest {
         assertEquals("123456", otpArgumentCaptorValue.otpCode(), "OTP code should match generated code");
         assertEquals(mockedCommand.userIdentifier(), otpArgumentCaptorValue.userIdentifier(), "User identifier should match command");
         assertEquals(mockedCommand.purpose(), otpArgumentCaptorValue.purpose(), "Purpose should match command");
-        assertEquals(mockedCommand.status(), otpArgumentCaptorValue.status(), "Status should match command");
+        assertEquals(OtpStatus.ACTIVE, otpArgumentCaptorValue.status(), "Status should match command");
         assertEquals(mockedCommand.deliveryMethod(), otpArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
         assertEquals(0, otpArgumentCaptorValue.attemptCount(), "Attempt count should be 0");
         assertNotNull(otpArgumentCaptorValue.createdAt(), "Created at should not be null");
