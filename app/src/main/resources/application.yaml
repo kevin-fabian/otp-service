@@ -5,18 +5,15 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
+springdoc:
+  model-converters:
+    naming-strategy: SNAKE_CASE
+
 logging:
   level:
     org.zalando.logbook: TRACE
-
-#logbook:
-#  format:
-#    style: http  # Ensures detailed logs, including headers and body
-#  exclude:
-#    - /actuator/** # Specify endpoints you want to exclude from logging
-#  obfuscate:
-#    headers:
-#      - Authorization
-#      - Cookie # Masks sensitive headers
-#    parameters:
-#      - password # Masks sensitive query parameters
+    
+otp:
+  expiration-minutes: 5
+  max-attempts: 3
+  code-length: 6

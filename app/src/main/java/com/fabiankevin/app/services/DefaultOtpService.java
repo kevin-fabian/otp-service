@@ -32,7 +32,7 @@ public class DefaultOtpService implements OtpService {
             throw new ActiveOtpException(userIdentifier);
         }
         OffsetDateTime now = OffsetDateTime.now();
-        String otpCode = otpGenerator.generateCode(properties.getOtpLength());
+        String otpCode = otpGenerator.generateCode(properties.getCodeLength());
         Otp otp = Otp.builder()
                 .deliveryMethod(command.deliveryMethod())
                 .purpose(command.purpose())
@@ -42,7 +42,7 @@ public class DefaultOtpService implements OtpService {
                 .otpCode(otpCode)
                 .attemptCount(0)
                 .createdAt(now)
-                .expiresAt(now.plusMinutes(properties.getExpiresInMinutes()))
+                .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                 .build();
 
         Otp savedOtp = otpRepository.saveAndFlush(otp);

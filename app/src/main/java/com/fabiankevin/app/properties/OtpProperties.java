@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class OtpProperties {
-    private int maxAttempt;
-    private int otpLength;
-    private int expiresInMinutes;
+    private int maxAttempts;
+    private int codeLength;
+    private int expirationMinutes;
 }

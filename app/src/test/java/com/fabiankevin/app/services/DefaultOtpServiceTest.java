@@ -38,8 +38,8 @@ class DefaultOtpServiceTest {
                 .userIdentifier("test@test.com")
                 .metadata("{}")
                 .build();
-        when(otpProperties.getOtpLength()).thenReturn(6);
-        when(otpProperties.getExpiresInMinutes()).thenReturn(1);
+        when(otpProperties.getCodeLength()).thenReturn(6);
+        when(otpProperties.getExpirationMinutes()).thenReturn(1);
     }
 
     @Test
@@ -61,7 +61,7 @@ class DefaultOtpServiceTest {
         assertNotNull(otpArgumentCaptorValue.createdAt(), "Created at should not be null");
         assertNotNull(otpArgumentCaptorValue.expiresAt(), "Expires at should not be null");
         assertEquals(
-                otpArgumentCaptorValue.createdAt().plusMinutes(otpProperties.getExpiresInMinutes()),
+                otpArgumentCaptorValue.createdAt().plusMinutes(otpProperties.getExpirationMinutes()),
                 otpArgumentCaptorValue.expiresAt(),
                 "Expires at should be created at plus expiration minutes"
         );
