@@ -51,4 +51,5 @@ The following properties can be configured:
 
 - `otp.code-length`: Length of generated OTP codes
 - `otp.expiration-minutes`: OTP validity period in minutes
+- `otp.max-attempts`: OTP max attempts
 
