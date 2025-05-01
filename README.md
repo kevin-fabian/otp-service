@@ -52,3 +52,11 @@ The following properties can be configured:
 - `otp.expiration-minutes`: OTP validity period in minutes
 - `otp.max-attempts`: OTP max attempts
 
+## Jasypt
+```bash
+#Run the encryption command:
+mvn jasypt:encrypt -Djasypt.encryptor.password="" -Djasypt.plugin.path="file:src/main/resources/application-local.yaml" -Djasypt.encryptor.algorithm="PBEWithHmacSHA256AndAES_256"
+
+#To decrypt a file with encrypted properties:
+mvn jasypt:decrypt -Djasypt.encryptor.password="" -Djasypt.plugin.path="file:src/main/resources/application-local.yaml" -Djasypt.encryptor.algorithm="PBEWithHmacSHA256AndAES_256"
+```

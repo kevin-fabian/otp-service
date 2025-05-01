@@ -1,3 +1,7 @@
+jasypt:
+  encryptor:
+    password: secret
+
 spring:
   datasource:
     url: jdbc:h2:file:./data/otpdb
@@ -15,8 +19,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: updateme
-    password: updateme
+    username: ENC(/djf0wBHQEFxtSMYppMQoe/Drpeefcr9CMkSxFSMzNFA+UUKp1HA1jYPmigQYy5p)
+    password: ENC(c+VNAOsM6SmKtHfc/2U5Z8w0yVx7cP7hjE9b0eewLIEi5SqwtY1IqgMPuHbx3Ore)
   h2:
     console:
       enabled: true

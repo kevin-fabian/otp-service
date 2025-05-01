@@ -1,6 +1,11 @@
 server:
   port: 8080
 
+jasypt:
+  encryptor:
+    algorithm: PBEWithHmacSHA256AndAES_256
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+
 spring:
   profiles:
     active: local
@@ -10,19 +15,16 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
   mail:
-    # --- Additional JavaMail Properties ---
     properties:
       mail:
         smtp:
-          # Enable SMTP authentication
           auth: true
-          # Enable STARTTLS encryption (required for port 587 with many providers like Gmail)
           starttls:
             enable: true
             required: true
 
 otp:
-  expiration-minutes: 5
+  expiration-minutes: 1
   max-attempts: 3
   code-length: 6
 
