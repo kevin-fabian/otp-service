@@ -71,7 +71,7 @@ class DefaultOtpServiceTest {
         assertNull(otpArgumentCaptorValue.id(), "ID should not be null");
         assertEquals("{}", otpArgumentCaptorValue.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).existByUserIdentifierAndStatusActive(mockedCommand.userIdentifier());
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
