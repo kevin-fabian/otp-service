@@ -41,9 +41,8 @@ API documentation is available via Swagger UI:
 
 ### OTP Management
 
-- `POST /api/v1/otp/generate` - Generate new OTP
-- `POST /api/v1/otp/validate` - Validate OTP
-- `GET /api/v1/otp/{id}` - Retrieve OTP by ID
+- `POST /api/v1/otp` - Generate new OTP
+- `POST /api/v1/otp/validation` - Validate OTP
 
 ## Configuration
 
