@@ -6,6 +6,7 @@ import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,5 +30,13 @@ public class DefaultOtpRepository implements OtpRepository {
     @Override
     public boolean existByUserIdentifierAndStatusActive(String userIdentifier) {
         return jpaOtpRepository.existsByUserIdentifierAndStatus(userIdentifier, OtpStatus.ACTIVE);
+    }
+
+    @Override
+    public Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String userIdentifier) {
+        return jpaOtpRepository.findByUserIdentifierAndStatusAndExpiresAtGreaterThan(userIdentifier,
+                OtpStatus.ACTIVE,
+                OffsetDateTime.now())
+                .map(OtpEntity::toModel);
     }
 }

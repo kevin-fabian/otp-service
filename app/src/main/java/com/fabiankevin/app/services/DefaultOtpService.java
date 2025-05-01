@@ -1,7 +1,6 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
-import com.fabiankevin.app.exceptions.ActiveOtpException;
 import com.fabiankevin.app.exceptions.UnsupportedDeliveryMethodException;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
@@ -26,31 +25,29 @@ public class DefaultOtpService implements OtpService {
 
     @Override
     public Otp generate(GenerateOtpCommand command) {
-        String userIdentifier = command.userIdentifier();
+        return otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(command.userIdentifier())
+                .orElseGet(() -> {
+                    OffsetDateTime now = OffsetDateTime.now();
+                    String otpCode = otpGenerator.generateCode(properties.getCodeLength());
+                    Otp otp = Otp.builder()
+                            .deliveryMethod(command.deliveryMethod())
+                            .purpose(command.purpose())
+                            .userIdentifier(command.userIdentifier())
+                            .metadata(command.metadata())
+                            .status(OtpStatus.ACTIVE)
+                            .otpCode(otpCode)
+                            .attemptCount(0)
+                            .createdAt(now)
+                            .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
+                            .build();
 
-        if (otpRepository.existByUserIdentifierAndStatusActive(userIdentifier)) {
-            throw new ActiveOtpException(userIdentifier);
-        }
-        OffsetDateTime now = OffsetDateTime.now();
-        String otpCode = otpGenerator.generateCode(properties.getCodeLength());
-        Otp otp = Otp.builder()
-                .deliveryMethod(command.deliveryMethod())
-                .purpose(command.purpose())
-                .userIdentifier(command.userIdentifier())
-                .metadata(command.metadata())
-                .status(OtpStatus.ACTIVE)
-                .otpCode(otpCode)
-                .attemptCount(0)
-                .createdAt(now)
-                .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
-                .build();
+                    Otp savedOtp = otpRepository.saveAndFlush(otp);
 
-        Otp savedOtp = otpRepository.saveAndFlush(otp);
+                    Optional.ofNullable(otpClientMap.get(otp.deliveryMethod()))
+                            .orElseThrow(() -> new UnsupportedDeliveryMethodException(otp.deliveryMethod()))
+                            .send(savedOtp);
 
-        Optional.ofNullable(otpClientMap.get(otp.deliveryMethod()))
-                .orElseThrow(() -> new UnsupportedDeliveryMethodException(otp.deliveryMethod()))
-                .send(savedOtp);
-
-        return savedOtp;
+                    return savedOtp;
+                });
     }
 }

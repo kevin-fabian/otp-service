@@ -12,7 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -71,5 +74,49 @@ class DefaultOtpServiceTest {
         verify(otpRepository, times(1)).existByUserIdentifierAndStatusActive(mockedCommand.userIdentifier());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
+    }
+
+    @Test
+    void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
+        Otp otp = generateOtp("test@test.com", "123456");
+        when(otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier()))
+                .thenReturn(Optional.of(otp));
+        Otp result = otpService.generate(mockedCommand);
+
+        // Assertions for the Otp object
+        assertEquals("123456", result.otpCode(), "OTP code should match generated code");
+        assertEquals(otp.userIdentifier(), result.userIdentifier(), "User identifier should match command");
+        assertEquals(otp.purpose(), result.purpose(), "Purpose should match command");
+        assertEquals(OtpStatus.ACTIVE, result.status(), "Status should match command");
+        assertEquals(otp.deliveryMethod(), result.deliveryMethod(), "Delivery method should match command");
+        assertEquals(0, result.attemptCount(), "Attempt count should be 0");
+        assertNotNull(result.createdAt(), "Created at should not be null");
+        assertNotNull(result.expiresAt(), "Expires at should not be null");
+        assertEquals(
+                result.createdAt().plusMinutes(otpProperties.getExpirationMinutes()),
+                result.expiresAt(),
+                "Expires at should be created at plus expiration minutes"
+        );
+        assertEquals(otp.id(), result.id(), "ID should match existing ID");
+        assertEquals("test metadata", result.metadata(), "Metadata should not be null");
+
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
+        verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
+    }
+
+    private static Otp generateOtp(String userIdentifier, String otpCode){
+        OffsetDateTime now = OffsetDateTime.now();
+        return Otp.builder()
+                .id(UUID.randomUUID())
+                .purpose(OtpPurpose.LOGIN)
+                .deliveryMethod(DeliveryMethod.EMAIL)
+                .userIdentifier(userIdentifier)
+                .status(OtpStatus.ACTIVE)
+                .metadata("test metadata")
+                .attemptCount(0)
+                .createdAt(now)
+                .expiresAt(now.plusMinutes(1))
+                .otpCode(otpCode)
+                .build();
     }
 }

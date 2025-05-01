@@ -9,4 +9,5 @@ public interface OtpRepository {
     Otp saveAndFlush(Otp otp);
     Optional<Otp> retrieveById(UUID id);
     boolean existByUserIdentifierAndStatusActive(String userIdentifier);
+    Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String userIdentifier);
 }
