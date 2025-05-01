@@ -7,6 +7,15 @@ public class AppException extends RuntimeException {
         super(message);
     }
 
+    public AppException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public AppException(String message, int httpCode, Throwable cause) {
+        super(message, cause);
+        this.httpCode = httpCode;
+    }
+
     public AppException(int httpCode, String message) {
         super(message);
         this.httpCode = httpCode;

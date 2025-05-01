@@ -9,7 +9,23 @@ spring:
       enabled: true
   jackson:
     property-naming-strategy: SNAKE_CASE
-    
+  mail:
+    # --- Mail Server Connection Properties ---
+    host: smtp.gmail.com           # Your SMTP server host (e.g., smtp.gmail.com)
+    port: 587                     # SMTP server port (e.g., 587 for TLS, 465 for SSL)
+    username: updateme
+    password: updateme
+    # --- Additional JavaMail Properties ---
+    properties:
+      mail:
+        smtp:
+          # Enable SMTP authentication
+          auth: true
+          # Enable STARTTLS encryption (required for port 587 with many providers like Gmail)
+          starttls:
+            enable: true
+            required: true
+
 otp:
   expiration-minutes: 5
   max-attempts: 3
