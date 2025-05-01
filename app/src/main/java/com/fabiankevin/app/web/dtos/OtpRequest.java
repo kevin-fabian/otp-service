@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 @Builder(toBuilder = true)
@@ -25,7 +26,7 @@ public record OtpRequest(
         @NotNull(message = "Delivery method must be specified")
         @JsonProperty("delivery_method")
         DeliveryMethod deliveryMethod,
-        @NotBlank(message = "Metadata if provided must not be empty")
+        @Size(min = 0, max = 1024, message = "Metadata must be a string up to 1024 characters")
         String metadata
 ) {
     public GenerateOtpCommand toCommand() {
