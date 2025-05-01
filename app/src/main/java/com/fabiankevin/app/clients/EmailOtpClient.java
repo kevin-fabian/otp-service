@@ -17,9 +17,8 @@ import org.thymeleaf.context.Context;
 public class EmailOtpClient implements OtpClient {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-    private String fromEmail;
-    private String subject;
-    private int expirationMinutes;
+    private final String subject;
+    private final int expirationMinutes;
 
     @Override
     public void send(Otp otp) {
@@ -34,7 +33,7 @@ public class EmailOtpClient implements OtpClient {
             String htmlContent = templateEngine.process("otp-email-template", context);
 
             helper.setTo(to);
-            helper.setSubject("Test Subject");
+            helper.setSubject(subject);
             helper.setText(htmlContent, true); // true indicates HTML content
 
             mailSender.send(message);

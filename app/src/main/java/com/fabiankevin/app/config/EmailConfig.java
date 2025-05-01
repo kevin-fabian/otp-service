@@ -1,6 +1,7 @@
 package com.fabiankevin.app.config;
 
 import com.fabiankevin.app.clients.EmailOtpClient;
+import com.fabiankevin.app.properties.OtpProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -10,7 +11,7 @@ import org.thymeleaf.TemplateEngine;
 public class EmailConfig {
 
     @Bean
-    public EmailOtpClient emailOtpClient(JavaMailSender javaMailSender, TemplateEngine templateEngine){
-        return new EmailOtpClient(javaMailSender, templateEngine);
+    public EmailOtpClient emailOtpClient(JavaMailSender javaMailSender, TemplateEngine templateEngine, OtpProperties otpProperties){
+        return new EmailOtpClient(javaMailSender, templateEngine, "OTP", otpProperties.getExpirationMinutes());
     }
 }
