@@ -13,6 +13,7 @@ import lombok.Builder;
 @Builder(toBuilder = true)
 public record OtpRequest(
         @NotBlank(message = "User identifier is required")
+        @Size(min = 1, max = 128, message = "User identifier must be a string up to 128 characters")
         @JsonProperty("user_identifier")
         @Schema(description = "User identifier could be an email or phone number",
                 examples = {
