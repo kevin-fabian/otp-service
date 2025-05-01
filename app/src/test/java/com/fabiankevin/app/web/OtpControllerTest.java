@@ -36,7 +36,7 @@ class OtpControllerTest {
     private Otp mockedOtp;
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         OffsetDateTime now = OffsetDateTime.now();
         mockedOtp = Otp.builder()
                 .id(UUID.randomUUID())
@@ -74,4 +74,69 @@ class OtpControllerTest {
 
         verify(otpService, times(1)).generate(any());
     }
+
+
+    @Test
+    void generateOtp_givenInvalidPurpose_thenShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/otp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "user_identifier": "test@test.com",
+                                   "purpose": "INVALID_PURPOSE",
+                                   "delivery_method": "EMAIL",
+                                   "metadata": "test metadata"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Failed"))
+                .andExpect(jsonPath("$.details").value("""
+                        Invalid request data.
+                        OtpPurpose must be one of the following: LOGIN, RESET_PASSWORD, TRANSACTION, VERIFICATION
+                        DeliveryMethod must be one of the following: SMS, EMAIL, PUSH
+                        """));
+
+        verify(otpService, never()).generate(any());
+    }
+
+    @Test
+    void generateOtp_givenInvalidDeliveryMethod_thenShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/otp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "user_identifier": "test@test.com",
+                                   "purpose": "LOGIN",
+                                   "delivery_method": "INVALID_METHOD",
+                                   "metadata": "test metadata"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Failed"))
+                .andExpect(jsonPath("$.details").value("""
+                        Invalid request data.
+                        OtpPurpose must be one of the following: LOGIN, RESET_PASSWORD, TRANSACTION, VERIFICATION
+                        DeliveryMethod must be one of the following: SMS, EMAIL, PUSH
+                        """));
+
+        verify(otpService, never()).generate(any());
+    }
+
+    @Test
+    void generateOtp_givenInvalidUserIdentifier_thenShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/otp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "user_identifier": "",
+                                   "purpose": "LOGIN",
+                                   "delivery_method": "EMAIL",
+                                   "metadata": "test metadata"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verify(otpService, never()).generate(any());
+    }
+
 }
