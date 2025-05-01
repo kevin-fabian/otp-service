@@ -42,7 +42,7 @@ API documentation is available via Swagger UI:
 ### OTP Management
 
 - `POST /api/v1/otp` - Generate new OTP
-- `POST /api/v1/otp/validation` - Validate OTP
+- `POST /api/v1/otp/validation` - Validate OTP(Not yet implemented)
 
 ## Configuration
 
