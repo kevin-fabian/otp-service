@@ -91,22 +91,6 @@ class DefaultOtpRepositoryTest {
     }
 
     @Test
-    void existByUserIdentifierAndStatusActive_givenActiveUserIdentifier_thenShouldReturnTrue() {
-        otpRepository.saveAndFlush(mockedOtp);
-
-        boolean exists = otpRepository.existByUserIdentifierAndStatusActive(mockedOtp.userIdentifier());
-
-        Assertions.assertThat(exists).isTrue();
-    }
-
-    @Test
-    void existByUserIdentifierAndStatusActive_givenInactiveUserIdentifier_thenShouldReturnFalse() {
-        boolean exists = otpRepository.existByUserIdentifierAndStatusActive("nonexistent@test.com");
-
-        Assertions.assertThat(exists).isFalse();
-    }
-
-    @Test
     void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
         Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
 

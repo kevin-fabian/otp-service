@@ -28,11 +28,6 @@ public class DefaultOtpRepository implements OtpRepository {
     }
 
     @Override
-    public boolean existByUserIdentifierAndStatusActive(String userIdentifier) {
-        return jpaOtpRepository.existsByUserIdentifierAndStatus(userIdentifier, OtpStatus.ACTIVE);
-    }
-
-    @Override
     public Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String userIdentifier) {
         return jpaOtpRepository.findByUserIdentifierAndStatusAndExpiresAtGreaterThan(userIdentifier,
                 OtpStatus.ACTIVE,
