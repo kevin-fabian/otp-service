@@ -39,8 +39,5 @@ public record Otp(
         if (attemptCount < 0) {
             throw new IllegalArgumentException("attemptCount must not be negative");
         }
-        if (expiresAt.isBefore(createdAt)) {
-            throw new IllegalArgumentException("expiresAt must not be before createdAt");
-        }
     }
 }

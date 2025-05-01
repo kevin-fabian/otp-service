@@ -105,4 +105,36 @@ class DefaultOtpRepositoryTest {
 
         Assertions.assertThat(exists).isFalse();
     }
+
+    @Test
+    void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
+        Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
+
+        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.userIdentifier());
+
+        Assertions.assertThat(retrievedOtp).isPresent();
+        Assertions.assertThat(retrievedOtp.get())
+                .usingRecursiveComparison()
+                .isEqualTo(savedOtp);
+    }
+
+    @Test
+    void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
+        mockedOtp = mockedOtp.toBuilder()
+                .expiresAt(OffsetDateTime.now().minusMinutes(1))
+                .build();
+        otpRepository.saveAndFlush(mockedOtp);
+
+        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.userIdentifier());
+
+        Assertions.assertThat(retrievedOtp).isEmpty();
+    }
+
+    @Test
+    void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenNonExistingUserIdentifier_thenShouldReturnEmpty() {
+        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired("nonexistent@test.com");
+
+        Assertions.assertThat(retrievedOtp).isEmpty();
+    }
+
 }
