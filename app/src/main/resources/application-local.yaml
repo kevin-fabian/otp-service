@@ -12,6 +12,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: updateme
+    password: updateme
   h2:
     console:
       enabled: true
