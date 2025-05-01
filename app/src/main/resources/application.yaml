@@ -2,38 +2,19 @@ server:
   port: 8080
 
 spring:
+  profiles:
+    active: local
   threads:
     virtual:
       enabled: true
-  datasource:
-    url: jdbc:h2:file:./data/otpdb
-    username: otpuser
-    password: otpuser
-    driverClassName: org.h2.Driver
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   jackson:
     property-naming-strategy: SNAKE_CASE
-
-springdoc:
-  model-converters:
-    naming-strategy: SNAKE_CASE
-
-logging:
-  level:
-    org.zalando.logbook: TRACE
     
 otp:
   expiration-minutes: 5
   max-attempts: 3
   code-length: 6
+
+logging:
+  level:
+    com.fabiankevin.app: INFO
