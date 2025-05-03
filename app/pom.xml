@@ -24,12 +24,14 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <jacoco.version>0.8.12</jacoco.version> <!-- Added JaCoCo version property -->
+        <jasypt.version>3.0.5</jasypt.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
-            <version>3.0.5</version>
+            <version>${jasypt.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -120,6 +122,28 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <!-- JaCoCo Plugin -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal> <!-- Prepares the JaCoCo runtime agent -->
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase> <!-- Binds report generation to the test phase -->
+                        <goals>
+                            <goal>report</goal> <!-- Generates the coverage report -->
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
