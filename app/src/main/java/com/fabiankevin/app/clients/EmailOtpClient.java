@@ -11,6 +11,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.exceptions.TemplateEngineException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,7 +39,7 @@ public class EmailOtpClient implements OtpClient {
 
             mailSender.send(message);
             log.info("Email sent successfully to {}", to);
-        } catch (MailException | MessagingException exception) {
+        } catch (MailException | MessagingException | TemplateEngineException exception) {
             log.error("Error sending email to {}", to, exception);
             throw new EmailSendingException(to, exception);
         }
