@@ -3,6 +3,9 @@
 A RESTful service for generating and managing One-Time Passwords (OTP) built with Spring Boot. This service provides
 secure OTP generation and validation with support for multiple delivery methods like SMS and Email.
 
+This service is meant to be used by upstream services this is why the security won't be configured here.
+If you are using zero-trust model, then you may configure SSL or integrate Spring Oauth2 resource service.
+
 ## Features
 
 - Generate OTP codes with configurable length and expiration
@@ -29,6 +32,10 @@ secure OTP generation and validation with support for multiple delivery methods 
 2. Configure application.properties with your database settings
 3. Run `mvn clean install` to build
 4. Start the application with `mvn spring-boot:run`
+
+## Implementing `OtpClient`
+In a scenario where you need to support another notification service such as SMS, PushNotification, Viber, etc
+Implement `OtpClient` and register the new at `AppConfig.defaultOtpService`
 
 ## API Documentation
 
