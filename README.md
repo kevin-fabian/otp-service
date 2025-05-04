@@ -25,6 +25,7 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 - Mockito
 - Lombok
 - Maven
+- Liquibase
 
 ## Setup & Usage
 
