@@ -31,3 +31,31 @@ otp:
 logging:
   level:
     com.fabiankevin.app: INFO
+
+logbook:
+  enabled: true
+  format:
+    style: http
+  obfuscate:
+    headers:
+      - Authorization
+      - X-Secret
+    parameters:
+      - password
+      - token
+  filter:
+    enabled: true
+  exclude:
+    - /health
+    - /metrics
+    - /actuator/**
+    - /swagger-ui/**
+    - /v3/api-docs/**
+  include:
+    - /api/**
+  conditions:
+    methods:
+      - GET
+      - POST
+    content-types:
+      - application/json
