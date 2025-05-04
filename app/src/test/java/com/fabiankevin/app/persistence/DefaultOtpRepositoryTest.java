@@ -121,4 +121,20 @@ class DefaultOtpRepositoryTest {
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
+    @Test
+    void save_givenValidOtp_thenShouldSaveAndReturnSavedEntity() {
+        Otp savedOtp = otpRepository.save(mockedOtp);
+
+        OtpEntity otpEntity = jpaOtpRepository.findById(savedOtp.id()).get();
+        Assertions.assertThat(otpEntity.toModel())
+                .usingRecursiveComparison()
+                .isEqualTo(savedOtp);
+    }
+
+    @Test
+    void save_givenNullOtp_thenShouldThrowException() {
+        Assertions.assertThatThrownBy(() -> otpRepository.save(null))
+                .isInstanceOf(NullPointerException.class)
+                .describedAs("Expecting NullPointerException when saving null OTP");
+    }
 }

@@ -17,13 +17,12 @@ public class DefaultOtpRepository implements OtpRepository {
 
     @Override
     public Otp saveAndFlush(Otp otp) {
-        OtpEntity entity = OtpEntity.fromModel(otp);
-        return jpaOtpRepository.save(entity).toModel();
+        return jpaOtpRepository.saveAndFlush( OtpEntity.fromModel(otp)).toModel();
     }
 
     @Override
     public Otp save(Otp otp) {
-        return null;
+        return jpaOtpRepository.save(OtpEntity.fromModel(otp)).toModel();
     }
 
     @Override
@@ -35,8 +34,8 @@ public class DefaultOtpRepository implements OtpRepository {
     @Override
     public Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String userIdentifier) {
         return jpaOtpRepository.findByUserIdentifierAndStatusAndExpiresAtGreaterThan(userIdentifier,
-                OtpStatus.ACTIVE,
-                OffsetDateTime.now())
+                        OtpStatus.ACTIVE,
+                        OffsetDateTime.now())
                 .map(OtpEntity::toModel);
     }
 }
