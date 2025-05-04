@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface OtpRepository {
     Otp saveAndFlush(Otp otp);
+    Otp save(Otp otp);
     Optional<Otp> retrieveById(UUID id);
     Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String userIdentifier);
 }

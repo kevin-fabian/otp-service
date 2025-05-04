@@ -22,6 +22,11 @@ public class DefaultOtpRepository implements OtpRepository {
     }
 
     @Override
+    public Otp save(Otp otp) {
+        return null;
+    }
+
+    @Override
     public Optional<Otp> retrieveById(UUID id) {
         return jpaOtpRepository.findById(id)
                 .map(OtpEntity::toModel);

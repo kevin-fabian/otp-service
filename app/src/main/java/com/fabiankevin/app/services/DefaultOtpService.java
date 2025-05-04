@@ -1,6 +1,7 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.exceptions.UnsupportedDeliveryMethodException;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
@@ -8,6 +9,7 @@ import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
+import com.fabiankevin.app.services.commands.VerifyOtpCommand;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -49,5 +51,20 @@ public class DefaultOtpService implements OtpService {
 
                     return savedOtp;
                 });
+    }
+
+    @Override
+    public void verify(VerifyOtpCommand command) {
+        otpRepository.retrieveById(command.id())
+                .map(otp -> {
+                    if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
+                        return otp;
+                    }
+
+                    return otpRepository.save(otp.toBuilder()
+                            .attemptCount(otp.attemptCount() + 1)
+                            .build());
+                })
+                .orElseThrow(OtpNotFoundException::new);
     }
 }

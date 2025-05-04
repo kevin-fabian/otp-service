@@ -18,6 +18,7 @@ public record Otp(
         OtpStatus status,
         OffsetDateTime createdAt,
         OffsetDateTime expiresAt,
+        OffsetDateTime lastAttemptAt,
         DeliveryMethod deliveryMethod,
         int attemptCount,
         String metadata

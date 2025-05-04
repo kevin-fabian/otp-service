@@ -8,6 +8,7 @@ import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
+import com.fabiankevin.app.services.commands.VerifyOtpCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,7 +35,7 @@ class DefaultOtpServiceTest {
     private GenerateOtpCommand mockedCommand;
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         mockedCommand = GenerateOtpCommand.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
@@ -104,7 +105,19 @@ class DefaultOtpServiceTest {
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
-    private static Otp generateOtp(String userIdentifier, String otpCode){
+    @Test
+    void verify_givenValidOtpCode_thenShouldSucceed() {
+        Otp otp = generateOtp("test@test.com", "123456");
+        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+
+        otpService.verify(VerifyOtpCommand.builder()
+                .id(otp.id())
+                .otpCode("123456")
+                .userIdentifier("test@test.com")
+                .build());
+    }
+
+    private static Otp generateOtp(String userIdentifier, String otpCode) {
         OffsetDateTime now = OffsetDateTime.now();
         return Otp.builder()
                 .id(UUID.randomUUID())
