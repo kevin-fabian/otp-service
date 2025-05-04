@@ -3,7 +3,7 @@
 A RESTful service for generating and managing One-Time Passwords (OTP) built with Spring Boot. This service provides
 secure OTP generation and validation with support for multiple delivery methods like SMS and Email.
 
-This service is meant to be used by upstream services this is why the security won't be configured here.
+This service is meant to be used by upstream service, this is why the security isn't configured here.
 If you are using a zero-trust model, then you may configure SSL or integrate Spring Oauth2 resource service.
 
 ## Features
