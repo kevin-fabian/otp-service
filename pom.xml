@@ -23,6 +23,7 @@
 	</developers>
 	<modules>
 		<module>app</module>
+		<module>autotest</module>
 	</modules>
 	<scm>
 		<connection/>

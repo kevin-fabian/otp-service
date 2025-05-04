@@ -7,8 +7,8 @@
         <artifactId>otp-service</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>otp-service-app</artifactId>
-    <name>otp-service-app</name>
+    <artifactId>app</artifactId>
+    <name>app</name>
     <url/>
     <licenses>
         <license/>
