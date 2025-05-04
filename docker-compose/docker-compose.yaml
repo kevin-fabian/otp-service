@@ -11,7 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./app/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../app/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres_user -d postgres_db"]
       interval: 10s
