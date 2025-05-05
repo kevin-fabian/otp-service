@@ -36,7 +36,7 @@ class OtpControllerTest {
     private Otp mockedOtp;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         OffsetDateTime now = OffsetDateTime.now();
         mockedOtp = Otp.builder()
                 .id(UUID.randomUUID())
