@@ -63,6 +63,7 @@ public class DefaultOtpService implements OtpService {
 
                     return otpRepository.save(otp.toBuilder()
                             .attemptCount(otp.attemptCount() + 1)
+                            .lastAttemptAt(OffsetDateTime.now())
                             .build());
                 })
                 .orElseThrow(OtpNotFoundException::new);

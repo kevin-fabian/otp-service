@@ -38,7 +38,7 @@ class DefaultOtpRepositoryTest {
     }
 
     @BeforeEach
-    public void setup(){
+    void setup(){
         OffsetDateTime now = OffsetDateTime.now();
         mockedOtp = Otp.builder()
                 .purpose(OtpPurpose.LOGIN)
