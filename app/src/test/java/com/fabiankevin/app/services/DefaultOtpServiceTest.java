@@ -1,6 +1,8 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.exceptions.OtpAttemptLimitExceededException;
+import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
@@ -35,7 +37,7 @@ class DefaultOtpServiceTest {
     private GenerateOtpCommand mockedCommand;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         mockedCommand = GenerateOtpCommand.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
@@ -44,6 +46,7 @@ class DefaultOtpServiceTest {
                 .build();
         when(otpProperties.getCodeLength()).thenReturn(6);
         when(otpProperties.getExpirationMinutes()).thenReturn(1);
+        when(otpProperties.getMaxAttempts()).thenReturn(3);
     }
 
     @Test
@@ -115,6 +118,64 @@ class DefaultOtpServiceTest {
                 .otpCode("123456")
                 .userIdentifier("test@test.com")
                 .build());
+
+        verify(otpRepository, never()).save(any());
+    }
+
+    @Test
+    void verify_givenNonExistingOtpCode_thenShouldThrowException() {
+        when(otpRepository.retrieveById(any(UUID.class))).thenReturn(Optional.empty());
+
+        VerifyOtpCommand command = VerifyOtpCommand.builder()
+                .id(UUID.randomUUID())
+                .otpCode("123456")
+                .userIdentifier("test@test.com")
+                .build();
+
+        assertThrows(OtpNotFoundException.class,
+                () -> otpService.verify(command),
+                "Should throw OtpNotFoundException when OTP ID is not found");
+
+        verify(otpRepository, never()).save(any());
+    }
+
+    @Test
+    void verify_givenIncorrectOtpCode_thenShouldIncrementAttempts() {
+        Otp otp = generateOtp("test@test.com", "654321");
+        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otpRepository.save(any(Otp.class))).thenReturn(otp);
+
+        VerifyOtpCommand command = VerifyOtpCommand.builder()
+                .id(otp.id())
+                .otpCode("123456")
+                .userIdentifier("test@test.com")
+                .build();
+
+        otpService.verify(command);
+
+        verify(otpRepository, times(1)).save(argThat(savedOtp ->
+                savedOtp.attemptCount() == 1 && savedOtp.updatedAt() != null));
+    }
+
+    @Test
+    void verify_givenMaxAttemptsExceeded_thenShouldThrowException() {
+        Otp otp = generateOtp("test@test.com", "654321").toBuilder()
+                .attemptCount(2)
+                .build();
+        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otpProperties.getMaxAttempts()).thenReturn(3);
+
+        VerifyOtpCommand command = VerifyOtpCommand.builder()
+                .id(otp.id())
+                .otpCode("123456")
+                .userIdentifier("test@test.com")
+                .build();
+
+        assertThrows(OtpAttemptLimitExceededException.class,
+                () -> otpService.verify(command),
+                "Should throw OtpAttemptLimitExceededException when max attempts are reached");
+
+        verify(otpRepository, never()).save(any());
     }
 
     private static Otp generateOtp(String userIdentifier, String otpCode) {

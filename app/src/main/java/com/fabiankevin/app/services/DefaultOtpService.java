@@ -1,6 +1,8 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.exceptions.OtpAttemptLimitExceededException;
+import com.fabiankevin.app.exceptions.OtpExpiredException;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.exceptions.UnsupportedDeliveryMethodException;
 import com.fabiankevin.app.models.Otp;
@@ -57,13 +59,25 @@ public class DefaultOtpService implements OtpService {
     public void verify(VerifyOtpCommand command) {
         otpRepository.retrieveById(command.id())
                 .map(otp -> {
+                    if( otp.expiresAt().isBefore( OffsetDateTime.now() ) ){
+                        throw new OtpExpiredException();
+                    }
+
                     if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
-                        return otp;
+                        return otpRepository.save(otp.toBuilder()
+                                .status(OtpStatus.USED)
+                                .updatedAt(OffsetDateTime.now())
+                                .build());
+                    }
+
+                    int attempts = otp.attemptCount() + 1;
+                    if (attempts >= properties.getMaxAttempts()) {
+                        throw new OtpAttemptLimitExceededException(String.valueOf(attempts));
                     }
 
                     return otpRepository.save(otp.toBuilder()
-                            .attemptCount(otp.attemptCount() + 1)
-                            .lastAttemptAt(OffsetDateTime.now())
+                            .attemptCount(attempts)
+                            .updatedAt(OffsetDateTime.now())
                             .build());
                 })
                 .orElseThrow(OtpNotFoundException::new);

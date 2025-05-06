@@ -42,8 +42,8 @@ public class OtpEntity {
     @Column(name = "expires_at", nullable = false)
     private OffsetDateTime expiresAt;
 
-    @Column(name = "last_attempt_at")
-    private OffsetDateTime lastAttemptAt;
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_method", nullable = false)
@@ -64,7 +64,7 @@ public class OtpEntity {
                 .status(status)
                 .createdAt(createdAt)
                 .expiresAt(expiresAt)
-                .lastAttemptAt(lastAttemptAt)
+                .updatedAt(updatedAt)
                 .deliveryMethod(deliveryMethod)
                 .attemptCount(attemptCount)
                 .metadata(metadata)
@@ -80,7 +80,7 @@ public class OtpEntity {
         entity.setStatus(otp.status());
         entity.setCreatedAt(otp.createdAt());
         entity.setExpiresAt(otp.expiresAt());
-        entity.setLastAttemptAt(otp.lastAttemptAt());
+        entity.setUpdatedAt(otp.updatedAt());
         entity.setDeliveryMethod(otp.deliveryMethod());
         entity.setAttemptCount(otp.attemptCount());
         entity.setMetadata(otp.metadata());
