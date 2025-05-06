@@ -5,6 +5,6 @@ import lombok.Builder;
 import java.util.UUID;
 
 @Builder(toBuilder = true)
-public record VerifyOtpCommand(UUID id, String userIdentifier, String otpCode) {
+public record VerifyOtpCommand(UUID id, String otpCode) {
     
 }

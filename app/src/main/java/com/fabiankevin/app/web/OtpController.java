@@ -3,6 +3,7 @@ package com.fabiankevin.app.web;
 import com.fabiankevin.app.services.OtpService;
 import com.fabiankevin.app.web.dtos.OtpRequest;
 import com.fabiankevin.app.web.dtos.OtpResponse;
+import com.fabiankevin.app.web.dtos.OtpVerificationRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,4 +41,20 @@ public class OtpController {
         return OtpResponse.from(otpService.generate(otpRequest.toCommand()));
     }
 
+    @PostMapping("/verification")
+    @Operation(summary = "Verify OTP",
+            description = "Verifies the provided OTP code.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully verified OTP"),
+                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "OTP not found", content = @Content),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            })
+    public void verifyOtp(
+            @Parameter(description = "Otp verification request")
+            @Valid
+            @RequestBody
+            OtpVerificationRequest request) {
+        otpService.verify(request.toCommand());
+    }
 }

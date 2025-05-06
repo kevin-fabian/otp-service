@@ -117,7 +117,6 @@ class DefaultOtpServiceTest {
         otpService.verify(VerifyOtpCommand.builder()
                 .id(otp.id())
                 .otpCode("123456")
-                .userIdentifier("test@test.com")
                 .build());
 
         verify(otpRepository, times(1)).retrieveById(otp.id());
@@ -131,7 +130,6 @@ class DefaultOtpServiceTest {
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(UUID.randomUUID())
                 .otpCode("123456")
-                .userIdentifier("test@test.com")
                 .build();
 
         assertThrows(OtpNotFoundException.class,
@@ -150,7 +148,6 @@ class DefaultOtpServiceTest {
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(otp.id())
                 .otpCode("123456")
-                .userIdentifier("test@test.com")
                 .build();
 
         otpService.verify(command);
@@ -170,7 +167,6 @@ class DefaultOtpServiceTest {
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(otp.id())
                 .otpCode("123456")
-                .userIdentifier("test@test.com")
                 .build();
 
         assertThrows(OtpAttemptLimitExceededException.class,

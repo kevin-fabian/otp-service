@@ -1,5 +1,6 @@
 package com.fabiankevin.app.web;
 
+import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
@@ -139,4 +140,72 @@ class OtpControllerTest {
         verify(otpService, never()).generate(any());
     }
 
+    @Test
+    void verifyOtp_givenValidRequest_thenShouldPassVerification() throws Exception {
+        doNothing().when(otpService).verify(any());
+
+        mockMvc.perform(post("/api/v1/otp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "otpCode": "123456",
+                                   "referenceId": "c0a80123-4567-890a-bcde-f0123456789a"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        verify(otpService, times(1)).verify(any());
+    }
+
+    @Test
+    void verifyOtp_givenInvalidOtpCode_thenShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/otp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "otpCode": "",
+                                   "referenceId": "c0a80123-4567-890a-bcde-f0123456789a"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Failed"))
+                .andExpect(jsonPath("$.details").value("OTP code must not be blank"));
+
+        verify(otpService, never()).verify(any());
+    }
+
+    @Test
+    void verifyOtp_givenInvalidReferenceId_thenShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/otp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "otpCode": "123456",
+                                   "referenceId": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Failed"))
+                .andExpect(jsonPath("$.details").value("Reference ID must not be blank"));
+
+        verify(otpService, never()).verify(any());
+    }
+
+    @Test
+    void verifyOtp_givenOtpNotFound_thenShouldReturnNotFound() throws Exception {
+        doThrow(new OtpNotFoundException()).when(otpService).verify(any());
+
+        mockMvc.perform(post("/api/v1/otp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                   "otpCode": "123456",
+                                   "referenceId": "c0a80123-4567-890a-bcde-f0123456789a"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("OTP not found"));
+
+        verify(otpService, times(1)).verify(any());
+    }
 }
