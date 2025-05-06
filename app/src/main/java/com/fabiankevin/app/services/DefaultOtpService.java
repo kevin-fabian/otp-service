@@ -59,15 +59,15 @@ public class DefaultOtpService implements OtpService {
     public void verify(VerifyOtpCommand command) {
         otpRepository.retrieveById(command.id())
                 .map(otp -> {
-                    if( otp.expiresAt().isBefore( OffsetDateTime.now() ) ){
+                    if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
                         throw new OtpExpiredException();
                     }
 
+                    OffsetDateTime now = OffsetDateTime.now();
+                    var otpBuilder = otp.toBuilder().updatedAt(now);
+
                     if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
-                        return otpRepository.save(otp.toBuilder()
-                                .status(OtpStatus.USED)
-                                .updatedAt(OffsetDateTime.now())
-                                .build());
+                        return otpRepository.save(otpBuilder.status(OtpStatus.USED).build());
                     }
 
                     int attempts = otp.attemptCount() + 1;
@@ -75,10 +75,7 @@ public class DefaultOtpService implements OtpService {
                         throw new OtpAttemptLimitExceededException(String.valueOf(attempts));
                     }
 
-                    return otpRepository.save(otp.toBuilder()
-                            .attemptCount(attempts)
-                            .updatedAt(OffsetDateTime.now())
-                            .build());
+                    return otpRepository.save(otpBuilder.attemptCount(attempts).build());
                 })
                 .orElseThrow(OtpNotFoundException::new);
     }

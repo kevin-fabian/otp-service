@@ -112,6 +112,7 @@ class DefaultOtpServiceTest {
     void verify_givenValidOtpCode_thenShouldSucceed() {
         Otp otp = generateOtp("test@test.com", "123456");
         when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otpRepository.save(any(Otp.class))).thenReturn(otp);
 
         otpService.verify(VerifyOtpCommand.builder()
                 .id(otp.id())
@@ -119,7 +120,8 @@ class DefaultOtpServiceTest {
                 .userIdentifier("test@test.com")
                 .build());
 
-        verify(otpRepository, never()).save(any());
+        verify(otpRepository, times(1)).retrieveById(otp.id());
+        verify(otpRepository, times(1)).save(any());
     }
 
     @Test
