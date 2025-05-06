@@ -148,8 +148,8 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otpCode": "123456",
-                                   "referenceId": "c0a80123-4567-890a-bcde-f0123456789a"
+                                   "otp_code": "123456",
+                                   "reference_id": "c0a80123-4567-890a-bcde-f0123456789a"
                                 }
                                 """))
                 .andExpect(status().isOk());
@@ -163,13 +163,14 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otpCode": "",
-                                   "referenceId": "c0a80123-4567-890a-bcde-f0123456789a"
+                                   "otp_code": "",
+                                   "reference_id": "c0a80123-4567-890a-bcde-f0123456789a"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.details").value("OTP code must not be blank"));
+                .andExpect(jsonPath("$.errors[0]").value("OTP code must be a string up to 6 digits"))
+                .andExpect(jsonPath("$.details").doesNotExist());
 
         verify(otpService, never()).verify(any());
     }
@@ -180,13 +181,14 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otpCode": "123456",
-                                   "referenceId": ""
+                                   "otp_code": "123456",
+                                   "reference_id": ""
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.details").value("Reference ID must not be blank"));
+                .andExpect(jsonPath("$.errors[0]").value("Reference ID must not be null"))
+                .andExpect(jsonPath("$.details").doesNotExist());
 
         verify(otpService, never()).verify(any());
     }
@@ -199,12 +201,13 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otpCode": "123456",
-                                   "referenceId": "c0a80123-4567-890a-bcde-f0123456789a"
+                                   "otp_code": "123456",
+                                   "reference_id": "c0a80123-4567-890a-bcde-f0123456789a"
                                 }
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("OTP not found"));
+                .andExpect(jsonPath("$.details").value("Otp not found"))
+                .andExpect(jsonPath("$.message").value("Resource Error"));
 
         verify(otpService, times(1)).verify(any());
     }
