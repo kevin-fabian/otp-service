@@ -111,8 +111,9 @@ class DefaultOtpServiceTest {
 
     @Test
     void verify_givenValidOtpCode_thenShouldSucceed() {
-        Otp otp = generateOtp("test@test.com", "123456");
+        Otp otp = spy(generateOtp("test@test.com", "123456"));
         when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otp.status()).thenReturn(OtpStatus.USED);
         when(otpRepository.save(any(Otp.class))).thenReturn(otp);
 
         otpService.verify(VerifyOtpCommand.builder()
