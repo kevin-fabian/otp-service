@@ -11,10 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/otp")
@@ -22,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OtpController {
     private final OtpService otpService;
 
-
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     @Operation(summary = "Generate OTP",
             description = "Generates a new OTP based on the provided request.",

@@ -1,6 +1,6 @@
 package com.fabiankevin.app.clients;
 
-import com.fabiankevin.app.exceptions.EmailSendingException;
+import com.fabiankevin.app.exceptions.EmailNotificationException;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
@@ -64,7 +64,7 @@ class EmailOtpClientTest {
 
         doThrow(new MailSendException("test")).when(mailSender).send(any(MimeMessage.class));
 
-        assertThatExceptionOfType(EmailSendingException.class)
+        assertThatExceptionOfType(EmailNotificationException.class)
                 .isThrownBy(() -> emailOtpClient.send(mockedOtp))
                 .withMessageContaining("test@example.com");
 
@@ -81,7 +81,7 @@ class EmailOtpClientTest {
         when(templateEngine.process(eq("otp-email-template"), any(Context.class))).thenThrow(TemplateInputException.class);
         doThrow(MessagingException.class).when(mimeMessageHelper).setTo(anyString());
 
-        assertThatExceptionOfType(EmailSendingException.class)
+        assertThatExceptionOfType(EmailNotificationException.class)
                 .isThrownBy(() -> emailOtpClient.send(mockedOtp))
                 .withMessageContaining("test@example.com");
 

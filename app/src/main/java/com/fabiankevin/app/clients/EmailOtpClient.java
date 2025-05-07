@@ -1,6 +1,6 @@
 package com.fabiankevin.app.clients;
 
-import com.fabiankevin.app.exceptions.EmailSendingException;
+import com.fabiankevin.app.exceptions.EmailNotificationException;
 import com.fabiankevin.app.models.Otp;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -41,7 +41,7 @@ public class EmailOtpClient implements OtpClient {
             log.info("Email sent successfully to {}", to);
         } catch (MailException | MessagingException | TemplateEngineException exception) {
             log.error("Error sending email to {}", to, exception);
-            throw new EmailSendingException(to, exception);
+            throw new EmailNotificationException(to, exception);
         }
     }
 }
