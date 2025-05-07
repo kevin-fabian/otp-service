@@ -3,6 +3,7 @@ package com.fabiankevin.app.services;
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.OtpAttemptLimitExceededException;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
+import com.fabiankevin.app.exceptions.OtpVerificationException;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
@@ -150,7 +151,9 @@ class DefaultOtpServiceTest {
                 .otpCode("123456")
                 .build();
 
-        otpService.verify(command);
+        assertThrows(OtpVerificationException.class,
+                () -> otpService.verify(command),
+                "Should throw OtpVerificationException when OTP code is incorrect");
 
         verify(otpRepository, times(1)).save(argThat(savedOtp ->
                 savedOtp.attemptCount() == 1 && savedOtp.updatedAt() != null));
@@ -158,11 +161,13 @@ class DefaultOtpServiceTest {
 
     @Test
     void verify_givenMaxAttemptsExceeded_thenShouldThrowException() {
-        Otp otp = generateOtp("test@test.com", "654321").toBuilder()
+        Otp otp = spy(generateOtp("test@test.com", "654321").toBuilder()
                 .attemptCount(2)
-                .build();
+                .build());
         when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
         when(otpProperties.getMaxAttempts()).thenReturn(3);
+        when(otp.status()).thenReturn(OtpStatus.INVALIDATED);
+        when(otpRepository.save(any(Otp.class))).thenReturn(otp);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(otp.id())
@@ -173,7 +178,8 @@ class DefaultOtpServiceTest {
                 () -> otpService.verify(command),
                 "Should throw OtpAttemptLimitExceededException when max attempts are reached");
 
-        verify(otpRepository, never()).save(any());
+        verify(otpRepository, times(1))
+                .save(argThat(savedOtp -> savedOtp.attemptCount() == 3 && savedOtp.updatedAt() != null));
     }
 
     private static Otp generateOtp(String userIdentifier, String otpCode) {

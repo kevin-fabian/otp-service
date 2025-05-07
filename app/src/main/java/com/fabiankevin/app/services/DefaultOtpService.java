@@ -1,10 +1,7 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
-import com.fabiankevin.app.exceptions.OtpAttemptLimitExceededException;
-import com.fabiankevin.app.exceptions.OtpExpiredException;
-import com.fabiankevin.app.exceptions.OtpNotFoundException;
-import com.fabiankevin.app.exceptions.UnsupportedDeliveryMethodException;
+import com.fabiankevin.app.exceptions.*;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -14,13 +11,14 @@ import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import com.fabiankevin.app.services.commands.VerifyOtpCommand;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
-@Transactional
+@Slf4j
 public class DefaultOtpService implements OtpService {
     private final OtpRepository otpRepository;
     private final Map<DeliveryMethod, OtpClient> otpClientMap;
@@ -28,6 +26,7 @@ public class DefaultOtpService implements OtpService {
     private final OtpProperties properties;
 
     @Override
+    @Transactional
     public Otp generate(GenerateOtpCommand command) {
         return otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(command.userIdentifier())
                 .orElseGet(() -> {
@@ -56,27 +55,34 @@ public class DefaultOtpService implements OtpService {
     }
 
     @Override
+    @Transactional(dontRollbackOn = {OtpVerificationException.class, OtpAttemptLimitExceededException.class, OtpExpiredException.class})
     public void verify(VerifyOtpCommand command) {
-        otpRepository.retrieveById(command.id())
+        Otp savedOtp = otpRepository.retrieveById(command.id())
                 .map(otp -> {
-                    if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
-                        throw new OtpExpiredException();
-                    }
-
                     OffsetDateTime now = OffsetDateTime.now();
                     var otpBuilder = otp.toBuilder().updatedAt(now);
+                    if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
+                        otpBuilder.status(OtpStatus.EXPIRED);
+                    }
 
                     if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
-                        return otpRepository.save(otpBuilder.status(OtpStatus.USED).build());
+                        otpBuilder.status(OtpStatus.USED).build();
                     }
 
                     int attempts = otp.attemptCount() + 1;
                     if (attempts >= properties.getMaxAttempts()) {
-                        throw new OtpAttemptLimitExceededException(String.valueOf(attempts));
+                        otpBuilder.status(OtpStatus.INVALIDATED);
                     }
 
                     return otpRepository.save(otpBuilder.attemptCount(attempts).build());
                 })
                 .orElseThrow(OtpNotFoundException::new);
+
+        switch (savedOtp.status()) {
+            case ACTIVE -> throw new OtpVerificationException();
+            case EXPIRED -> throw new OtpExpiredException();
+            case INVALIDATED -> throw new OtpAttemptLimitExceededException();
+            default -> log.info("Otp has been verified.");
+        }
     }
 }
