@@ -42,8 +42,8 @@ Implement `OtpClient` and register the new at `AppConfig.defaultOtpService`
 
 API documentation is available via Swagger UI:
 
-- Local: http://localhost:8080/swagger-ui.html
-- API Docs: http://localhost:8080/v3/api-docs
+- Local: http://localhost:8081/swagger-ui.html
+- API Docs: http://localhost:8081/v3/api-docs
 
 ## Available Endpoints
 
