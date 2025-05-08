@@ -1,12 +1,14 @@
 server:
   port: 8081
 
-ring:
+spring:
+  application:
+    name: otp-service
   profiles:
     active: h2
   threads:
     virtual:
-      CC CCVBCVBGB C     HF : true
+      enabled: true
   jackson:
     property-naming-strategy: SNAKE_CASE
   mail:

@@ -1,0 +1,18 @@
+# grafana-datasources.yml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus:9090
+    access: proxy
+    isDefault: true
+    editable: true
+  - name: Tempo
+    type: tempo
+    url: http://tempo:3200
+    access: proxy
+    editable: true
+    jsonData:
+      httpMethod: GET
+      tracesToMetrics:
+        datasourceUid: Prometheus

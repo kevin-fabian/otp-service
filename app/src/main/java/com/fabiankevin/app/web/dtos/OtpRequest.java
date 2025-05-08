@@ -17,8 +17,8 @@ public record OtpRequest(
         @JsonProperty("user_identifier")
         @Schema(description = "User identifier could be an email or phone number",
                 examples = {
+                        "+639000000000",
                         "test@example.com",
-                        "+639000000"
                 },
                 maxLength = 128)
         String userIdentifier,
