@@ -50,6 +50,7 @@ services:
     ports:
       - "4317:4317" # gRPC
       - "4318:4318" # HTTP
+      - "8889:8889" # Prometheus exporter
     depends_on:
       - tempo
 
@@ -65,6 +66,21 @@ services:
       - "--storage.trace.wal.path=/tmp/tempo/wal"
       - "--auth.enabled=false"
       - "-config.file=/etc/tempo.yml"
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - otel-collector
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
 
 volumes:
   postgres_data:

@@ -29,9 +29,6 @@ management:
     web:
       exposure:
         include: prometheus
-  endpoint:
-    metrics:
-      access: read_only
 
 otp:
   expiration-minutes: 1
@@ -43,7 +40,6 @@ logging:
     com.fabiankevin.app: INFO
 
 logbook:
-  enabled: true
   format:
     style: http
   obfuscate:
@@ -55,17 +51,3 @@ logbook:
       - token
   filter:
     enabled: true
-  exclude:
-    - /health
-    - /metrics
-    - /actuator/**
-    - /swagger-ui/**
-    - /v3/api-docs/**
-  include:
-    - /api/**
-  conditions:
-    methods:
-      - GET
-      - POST
-    content-types:
-      - application/json
