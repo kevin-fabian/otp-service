@@ -35,8 +35,8 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 4. Start the application with `mvn spring-boot:run`
 
 ## Implementing `OtpClient`
-In a scenario where you need to support another notification service such as SMS, PushNotification, Viber, etc
-Implement `OtpClient` and register the new at `AppConfig.defaultOtpService`
+In a scenario where you need to support another notification service such as SMS, PushNotification, Viber, etc.
+Implement `OtpClient` and register the new client at `AppConfig.defaultOtpService`
 
 ## API Documentation
 

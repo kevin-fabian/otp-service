@@ -1,12 +1,12 @@
 server:
   port: 8081
 
-spring:
+ring:
   profiles:
     active: h2
   threads:
     virtual:
-      enabled: true
+      CC CCVBCVBGB C     HF : true
   jackson:
     property-naming-strategy: SNAKE_CASE
   mail:
