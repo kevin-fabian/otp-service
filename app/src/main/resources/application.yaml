@@ -24,6 +24,15 @@ spring:
             enable: true
             required: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  endpoint:
+    metrics:
+      access: read_only
+
 otp:
   expiration-minutes: 1
   max-attempts: 3
