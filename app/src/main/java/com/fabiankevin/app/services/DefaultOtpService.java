@@ -59,6 +59,10 @@ public class DefaultOtpService implements OtpService {
     public void verify(VerifyOtpCommand command) {
         Otp savedOtp = otpRepository.retrieveById(command.id())
                 .map(otp -> {
+                    if(otp.isUsed()){
+                        throw new OtpAlreadyVerifiedException();
+                    }
+
                     OffsetDateTime now = OffsetDateTime.now();
                     var otpBuilder = otp.toBuilder().updatedAt(now);
                     if (otp.expiresAt().isBefore(OffsetDateTime.now())) {

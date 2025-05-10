@@ -1,6 +1,7 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.exceptions.OtpAlreadyVerifiedException;
 import com.fabiankevin.app.exceptions.OtpAttemptLimitExceededException;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.exceptions.OtpVerificationException;
@@ -182,6 +183,29 @@ class DefaultOtpServiceTest {
         verify(otpRepository, times(1))
                 .save(argThat(savedOtp -> savedOtp.attemptCount() == 3 && savedOtp.updatedAt() != null));
     }
+
+    @Test
+    void verify_givenOtpIsAlreadyVerified_thenShouldThrowException() {
+        Otp otp = spy(generateOtp("test@test.com", "123456").toBuilder()
+                .attemptCount(2)
+                .build());
+        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otp.isUsed()).thenReturn(true);
+
+        VerifyOtpCommand command = VerifyOtpCommand.builder()
+                .id(otp.id())
+                .otpCode("123456")
+                .build();
+
+        OtpAlreadyVerifiedException otpAlreadyVerifiedException = assertThrows(OtpAlreadyVerifiedException.class,
+                () -> otpService.verify(command),
+                "Should throw OtpAlreadyVerifiedException when OTP is already verified");
+
+        assertEquals("OTP has already been used", otpAlreadyVerifiedException.getMessage(), "exception message should match");
+        verify(otpRepository, times(1)).retrieveById(otp.id());
+        verify(otpRepository, never()).save(any(Otp.class));
+    }
+
 
     private static Otp generateOtp(String userIdentifier, String otpCode) {
         OffsetDateTime now = OffsetDateTime.now();

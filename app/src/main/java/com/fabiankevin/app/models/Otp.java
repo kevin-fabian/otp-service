@@ -41,4 +41,8 @@ public record Otp(
             throw new IllegalArgumentException("attemptCount must not be negative");
         }
     }
+
+    public boolean isUsed() {
+        return status == OtpStatus.USED;
+    }
 }
