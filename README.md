@@ -95,9 +95,15 @@ API documentation is available via Swagger UI:
 
 The following properties can be configured:
 
-- `otp.code-length`: Length of generated OTP codes
-- `otp.expiration-minutes`: OTP validity period in minutes
-- `otp.max-attempts`: OTP max attempts
+```yml
+otp:
+#  OTP validity period in minutes
+  expiration-minutes: 1
+#  OTP max attempts
+  max-attempts: 3
+#  Length of generated OTP codes
+  code-length: 6
+```
 
 ## Jasypt
 ```bash
