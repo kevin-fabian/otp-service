@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Error response object")
-public class ErrorResponse {
+public class ApiErrorResponse {
     @Schema(description = "Main error message", example = "Validation Failed")
     private String message;
 
@@ -27,13 +27,13 @@ public class ErrorResponse {
     @Schema(description = "List of validation errors", example = "[\"Name is required\"]")
     private List<String> errors;
 
-    public ErrorResponse(String message, String details) {
+    public ApiErrorResponse(String message, String details) {
         this.message = message;
         this.details = details;
         this.timestamp = Instant.now();
     }
 
-    public ErrorResponse(String message, List<String> errors) {
+    public ApiErrorResponse(String message, List<String> errors) {
         this.message = message;
         this.errors = errors;
         this.timestamp = Instant.now();
