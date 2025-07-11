@@ -15,7 +15,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -26,8 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(OtpController.class)
 class OtpControllerTest {
-    private static final DateTimeFormatter DEFAULT_CUSTOM_ISO8601_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSXXX");
-
     @Autowired
     private MockMvc mockMvc;
 
@@ -68,7 +65,7 @@ class OtpControllerTest {
                                    "metadata": "test metadata"
                                 }
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(mockedOtp.id().toString()))
                 .andExpect(jsonPath("$.expired_at").exists());
 
