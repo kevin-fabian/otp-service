@@ -6,10 +6,12 @@ import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.services.OtpService;
+import com.github.fabiankevin.microwebspringbootstarter.MicrowebAutoConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(OtpController.class)
+@Import({MicrowebAutoConfiguration.class})
 class OtpControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -87,11 +90,7 @@ class OtpControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.details").value("""
-                        Invalid request data.
-                        OtpPurpose must be one of the following: LOGIN, RESET_PASSWORD, TRANSACTION, VERIFICATION
-                        DeliveryMethod must be one of the following: SMS, EMAIL, PUSH
-                        """));
+                .andExpect(jsonPath("$.details").value("Malformed JSON request"));
 
         verify(otpService, never()).generate(any());
     }
@@ -110,11 +109,7 @@ class OtpControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.details").value("""
-                        Invalid request data.
-                        OtpPurpose must be one of the following: LOGIN, RESET_PASSWORD, TRANSACTION, VERIFICATION
-                        DeliveryMethod must be one of the following: SMS, EMAIL, PUSH
-                        """));
+                .andExpect(jsonPath("$.details").value("Malformed JSON request"));
 
         verify(otpService, never()).generate(any());
     }
