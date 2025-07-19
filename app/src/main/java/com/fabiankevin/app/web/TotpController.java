@@ -6,7 +6,9 @@ import com.fabiankevin.app.services.commands.RegisterTotpCommand;
 import com.fabiankevin.app.web.dtos.RegisterTotpRequest;
 import com.fabiankevin.app.web.dtos.TotpResponse;
 import com.fabiankevin.app.web.dtos.VerifyOtpRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +20,8 @@ public class TotpController {
     private final TotpService totpService;
 
     @PostMapping("/users/registration")
-    public TotpResponse register(@RequestBody RegisterTotpRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public TotpResponse register(@Valid @RequestBody RegisterTotpRequest request) {
         TotpUser totpUser = totpService.registerTotp(new RegisterTotpCommand(request.userReferenceId()));
         return new TotpResponse(totpUser.userReferenceId());
     }
