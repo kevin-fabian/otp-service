@@ -34,7 +34,7 @@ public class TotpController {
     }
 
     @PostMapping("/verification")
-    public void verify(@RequestBody VerifyOtpRequest request) {
+    public void verify(@Valid @RequestBody VerifyOtpRequest request) {
         totpService.verifyTotp(request.userReferenceId(), request.code());
     }
 }

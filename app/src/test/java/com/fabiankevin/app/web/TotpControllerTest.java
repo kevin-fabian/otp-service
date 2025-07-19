@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -104,5 +104,50 @@ class TotpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.details").value("Unregistered"));
+    }
+
+    @Test
+    void verify_givenValidRequest_thenShouldVerifySuccessfully() throws Exception {
+        mockMvc.perform(post("/api/v1/totp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "user_reference_id": "validUserReferenceId",
+                                    "code": "123456"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        verify(totpService, times(1)).verifyTotp("validUserReferenceId", "123456");
+    }
+
+    @Test
+    void verify_givenInvalidRequest_thenShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/totp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Failed"));
+    }
+
+    @Test
+    void verify_givenUnregisteredUser_thenShouldReturnNotFound() throws Exception {
+        String invalidUserReferenceId = "invalidUserReferenceId";
+        String code = "654321";
+
+        doThrow(new TotpUnregisteredException()).when(totpService).verifyTotp(invalidUserReferenceId, code);
+
+        mockMvc.perform(post("/api/v1/totp/verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "user_reference_id": "invalidUserReferenceId",
+                                    "code": "654321"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.details").value("Unregistered"));
+
+        verify(totpService, times(1)).verifyTotp(invalidUserReferenceId, code);
     }
 }
