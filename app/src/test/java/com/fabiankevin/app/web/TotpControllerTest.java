@@ -1,5 +1,6 @@
 package com.fabiankevin.app.web;
 
+import com.fabiankevin.app.exceptions.TotpUnregisteredException;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.services.TotpService;
 import com.fabiankevin.app.web.dtos.TotpResponse;
@@ -13,9 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -75,5 +77,32 @@ class TotpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("null"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getQrCodeImage_givenValidUserReferenceId_thenShouldReturnQrCodeImage() throws Exception {
+        String validUserReferenceId = "validUserReferenceId";
+        byte[] qrCodeImage = "sampleQrCodeImage".getBytes();
+
+
+        when(totpService.getQrCodeImageByUserReferenceId(validUserReferenceId)).thenReturn(qrCodeImage);
+
+        mockMvc.perform(get("/api/v1/totp/qr/{userReferenceId}", validUserReferenceId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertEquals(MediaType.IMAGE_PNG_VALUE, result.getResponse().getContentType(), "Content type should be PNG image"))
+                .andExpect(result -> assertArrayEquals(qrCodeImage, result.getResponse().getContentAsByteArray(), "QR code image content should match"));
+    }
+
+    @Test
+    void getQrCodeImage_givenInvalidUserReferenceId_thenShouldReturnNotFound() throws Exception {
+        String invalidUserReferenceId = "invalidUserReferenceId";
+
+        when(totpService.getQrCodeImageByUserReferenceId(invalidUserReferenceId)).thenThrow(new TotpUnregisteredException());
+
+        mockMvc.perform(get("/api/v1/totp/qr/" + invalidUserReferenceId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.details").value("Unregistered"));
     }
 }

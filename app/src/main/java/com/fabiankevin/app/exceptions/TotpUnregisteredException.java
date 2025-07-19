@@ -4,6 +4,6 @@ import com.github.fabiankevin.microwebspringbootstarter.exceptions.ApiException;
 
 public class TotpUnregisteredException extends ApiException {
     public TotpUnregisteredException() {
-        super("Unregistered", 400);
+        super("Unregistered", 404);
     }
 }
