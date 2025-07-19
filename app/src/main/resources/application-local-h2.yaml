@@ -20,11 +20,14 @@ spring:
 logging:
   level:
     org.zalando.logbook: TRACE
+    com.github.fabiankevin: DEBUG
 
 management:
   otlp:
     tracing:
       endpoint: http://localhost:4318
+      export:
+        enabled: false
   tracing:
     sampling:
       probability: 1.0

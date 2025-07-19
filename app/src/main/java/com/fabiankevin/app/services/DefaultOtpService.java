@@ -59,23 +59,25 @@ public class DefaultOtpService implements OtpService {
     public void verify(VerifyOtpCommand command) {
         Otp savedOtp = otpRepository.retrieveById(command.id())
                 .map(otp -> {
-                    if(otp.isUsed()){
+                    if (otp.isUsed()) {
                         throw new OtpAlreadyVerifiedException();
                     }
+
+                    int attempts = otp.attemptCount();
 
                     OffsetDateTime now = OffsetDateTime.now();
                     var otpBuilder = otp.toBuilder().updatedAt(now);
                     if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
                         otpBuilder.status(OtpStatus.EXPIRED);
-                    }
+                    } else {
+                        if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
+                            otpBuilder.status(OtpStatus.USED).build();
+                        }
 
-                    if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
-                        otpBuilder.status(OtpStatus.USED).build();
-                    }
-
-                    int attempts = otp.attemptCount() + 1;
-                    if (attempts >= properties.getMaxAttempts()) {
-                        otpBuilder.status(OtpStatus.INVALIDATED);
+                        attempts = otp.attemptCount() + 1;
+                        if (attempts >= properties.getMaxAttempts()) {
+                            otpBuilder.status(OtpStatus.INVALIDATED);
+                        }
                     }
 
                     return otpRepository.save(otpBuilder.attemptCount(attempts).build());

@@ -45,6 +45,8 @@ public class OtpController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successfully verified OTP"),
                     @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
+                    @ApiResponse(responseCode = "429", description = "OTP attempt limit exceeded", content = @Content),
+
                     @ApiResponse(responseCode = "404", description = "OTP not found", content = @Content),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
             })

@@ -1,7 +1,6 @@
 package com.fabiankevin.app.config;
 
 import com.fabiankevin.app.clients.EmailOtpClient;
-import com.fabiankevin.app.clients.TestSMSOtpClient;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.properties.OtpProperties;
@@ -29,8 +28,7 @@ public class AppConfig {
                                         OtpProperties otpProperties) {
         return new DefaultOtpService(otpRepository,
                 Map.of(
-                        DeliveryMethod.EMAIL, emailOtpClient,
-                        DeliveryMethod.SMS, new TestSMSOtpClient()
+                        DeliveryMethod.EMAIL, emailOtpClient
                 ),
                 new DefaultOtpGenerator(),
                 otpProperties);

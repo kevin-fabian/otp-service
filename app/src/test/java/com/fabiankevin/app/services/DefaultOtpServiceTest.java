@@ -1,10 +1,7 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
-import com.fabiankevin.app.exceptions.OtpAlreadyVerifiedException;
-import com.fabiankevin.app.exceptions.OtpAttemptLimitExceededException;
-import com.fabiankevin.app.exceptions.OtpNotFoundException;
-import com.fabiankevin.app.exceptions.OtpVerificationException;
+import com.fabiankevin.app.exceptions.*;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
@@ -111,6 +108,20 @@ class DefaultOtpServiceTest {
     }
 
     @Test
+    void generate_givenDeliveryMethodIsNotSupported_thenShouldThrowException() {
+        when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
+
+        assertThrows(UnsupportedDeliveryMethodException.class, () -> {
+            otpService.generate(mockedCommand.toBuilder()
+                    .deliveryMethod(DeliveryMethod.PUSH)
+                    .build());
+        }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
+
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
+        verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
+    }
+
+    @Test
     void verify_givenValidOtpCode_thenShouldSucceed() {
         Otp otp = spy(generateOtp("test@test.com", "123456"));
         when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
@@ -204,6 +215,27 @@ class DefaultOtpServiceTest {
         assertEquals("OTP has already been used", otpAlreadyVerifiedException.getMessage(), "exception message should match");
         verify(otpRepository, times(1)).retrieveById(otp.id());
         verify(otpRepository, never()).save(any(Otp.class));
+    }
+
+    @Test
+    void verify_givenExpiredOtp_thenShouldThrowException() {
+        Otp otp = generateOtp("test@test.com", "123456").toBuilder()
+                .expiresAt(OffsetDateTime.now().minusMinutes(1))
+                .build();
+        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otpRepository.save(any(Otp.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        VerifyOtpCommand command = VerifyOtpCommand.builder()
+                .id(otp.id())
+                .otpCode("123456")
+                .build();
+
+        assertThrows(OtpExpiredException.class,
+                () -> otpService.verify(command),
+                "Should throw OtpExpiredException when OTP has expired");
+
+        verify(otpRepository, times(1)).retrieveById(otp.id());
+        verify(otpRepository, times(1)).save(any(Otp.class));
     }
 
 
