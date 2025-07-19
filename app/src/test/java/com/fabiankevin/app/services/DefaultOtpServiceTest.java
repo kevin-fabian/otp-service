@@ -108,6 +108,20 @@ class DefaultOtpServiceTest {
     }
 
     @Test
+    void generate_givenDeliveryMethodIsNotSupported_thenShouldThrowException() {
+        when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
+
+        assertThrows(UnsupportedDeliveryMethodException.class, () -> {
+            otpService.generate(mockedCommand.toBuilder()
+                    .deliveryMethod(DeliveryMethod.PUSH)
+                    .build());
+        }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
+
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
+        verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
+    }
+
+    @Test
     void verify_givenValidOtpCode_thenShouldSucceed() {
         Otp otp = spy(generateOtp("test@test.com", "123456"));
         when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
