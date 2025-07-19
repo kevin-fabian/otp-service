@@ -1,19 +1,38 @@
 package com.fabiankevin.app.web;
 
+import com.fabiankevin.app.models.TotpUser;
+import com.fabiankevin.app.services.TotpService;
+import com.fabiankevin.app.services.commands.RegisterTotpCommand;
 import com.fabiankevin.app.web.dtos.RegisterTotpRequest;
 import com.fabiankevin.app.web.dtos.TotpResponse;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.fabiankevin.app.web.dtos.VerifyOtpRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/api/totp")
+@RequestMapping("/api/v1/totp")
+@RequiredArgsConstructor
 public class TotpController {
+    private final TotpService totpService;
 
-    @PostMapping
-    public TotpResponse register(RegisterTotpRequest request) {
-        // This method should handle the registration of TOTP credentials
-        // For now, we return a placeholder response
-        return new TotpResponse("");
+    @PostMapping("/users/registration")
+    public TotpResponse register(@RequestBody RegisterTotpRequest request) {
+        TotpUser totpUser = totpService.registerTotp(new RegisterTotpCommand(request.userReferenceId()));
+        return new TotpResponse("test");
+    }
+
+    // TODO - Extra the userReferenceId from principal
+    @GetMapping(value = "/qr/{userReferenceId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getQrCodeImage(@PathVariable String userReferenceId) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(totpService.getQrCodeImageByUserReferenceId(userReferenceId));
+    }
+
+    @PostMapping("/verification")
+    public void verify(@RequestBody VerifyOtpRequest request) {
+        totpService.verifyTotp(request.userReferenceId(), request.code());
     }
 }

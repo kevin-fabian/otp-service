@@ -1,8 +1,10 @@
 package com.fabiankevin.app.services;
 
-import com.fabiankevin.app.models.Totp;
+import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.services.commands.RegisterTotpCommand;
 
 public interface TotpService {
-    Totp registerTotp(RegisterTotpCommand command);
+    TotpUser registerTotp(RegisterTotpCommand command);
+    byte[] getQrCodeImageByUserReferenceId(String id);
+    void verifyTotp(String userReferenceId, String totpCode);
 }
