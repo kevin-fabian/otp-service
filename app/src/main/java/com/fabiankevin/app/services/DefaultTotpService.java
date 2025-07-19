@@ -63,7 +63,7 @@ public class DefaultTotpService implements TotpService {
         TotpUser totpUser = totpUserRepository.findByUserReferenceId(userReferenceId)
                 .orElseThrow(TotpUnregisteredException::new);
 
-        if (!totpCodeVerifier.verify(totpUser.secret(), totpCode)) {
+            if (!totpCodeVerifier.verify(totpUser.secret(), totpCode)) {
             throw new TotpInvalidCodeException();
         }
     }

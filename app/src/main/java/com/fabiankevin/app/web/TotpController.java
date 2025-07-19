@@ -20,10 +20,9 @@ public class TotpController {
     @PostMapping("/users/registration")
     public TotpResponse register(@RequestBody RegisterTotpRequest request) {
         TotpUser totpUser = totpService.registerTotp(new RegisterTotpCommand(request.userReferenceId()));
-        return new TotpResponse("test");
+        return new TotpResponse(totpUser.userReferenceId());
     }
 
-    // TODO - Extra the userReferenceId from principal
     @GetMapping(value = "/qr/{userReferenceId}", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> getQrCodeImage(@PathVariable String userReferenceId) {
         return ResponseEntity.ok()
