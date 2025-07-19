@@ -1,6 +1,7 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.exceptions.TotpAlreadyRegisteredException;
+import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
 import com.fabiankevin.app.exceptions.TotpUnregisteredException;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.persistence.TotpUserRepository;
@@ -113,5 +114,67 @@ class DefaultTotpServiceTest {
 
         verify(totpUserRepository).findByUserReferenceId(userReferenceId);
         verifyNoInteractions(qrGenerator);
+    }
+
+    @Test
+    void verifyTotp_givenValidCode_thenShouldVerifySuccessfully() {
+        String userReferenceId = "test-user";
+        String totpCode = "123456";
+        String secret = "test-secret";
+
+        TotpUser totpUser = TotpUser.builder()
+                .userReferenceId(userReferenceId)
+                .secret(secret)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
+        when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
+
+        assertDoesNotThrow(() -> service.verifyTotp(userReferenceId, totpCode),
+                "Should not throw exception when TOTP code is valid");
+
+        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
+        verify(totpCodeVerifier).verify(secret, totpCode);
+    }
+
+    @Test
+    void verifyTotp_givenInvalidCode_thenShouldThrowException() {
+        String userReferenceId = "test-user";
+        String totpCode = "123456";
+        String secret = "test-secret";
+
+        TotpUser totpUser = TotpUser.builder()
+                .userReferenceId(userReferenceId)
+                .secret(secret)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
+        when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(false);
+
+        assertThrows(TotpInvalidCodeException.class,
+                () -> service.verifyTotp(userReferenceId, totpCode),
+                "Exception should be thrown when TOTP code is invalid");
+
+        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
+        verify(totpCodeVerifier).verify(secret, totpCode);
+    }
+
+    @Test
+    void verifyTotp_givenNonExistentUser_thenShouldThrowException() {
+        String userReferenceId = "test-user";
+        String totpCode = "123456";
+
+        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.empty());
+
+        assertThrows(TotpUnregisteredException.class,
+                () -> service.verifyTotp(userReferenceId, totpCode),
+                "Exception should be thrown when the user is not found");
+
+        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
+        verifyNoInteractions(totpCodeVerifier);
     }
 }
