@@ -32,8 +32,8 @@ public class DefaultOtpRepository implements OtpRepository {
     }
 
     @Override
-    public Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String userIdentifier) {
-        return jpaOtpRepository.findByUserIdentifierAndStatusAndExpiresAtGreaterThan(userIdentifier,
+    public Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String recipient) {
+        return jpaOtpRepository.findByRecipientAndStatusAndExpiresAtGreaterThan(recipient,
                         OtpStatus.ACTIVE,
                         OffsetDateTime.now())
                 .map(OtpEntity::toModel);

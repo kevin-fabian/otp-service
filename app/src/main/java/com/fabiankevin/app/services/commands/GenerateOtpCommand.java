@@ -6,7 +6,7 @@ import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record GenerateOtpCommand(
-        String userIdentifier,
+        String recipient,
         OtpPurpose purpose,
         DeliveryMethod deliveryMethod,
         String metadata

@@ -12,8 +12,13 @@ databaseChangeLog:
       id: 1.0.1
       sqlFile:
         dbms: 'postgresql'
-        path: rollouts/V1.0.0_initial-tables.sql
+        path: rollouts/V1.0.0_initial-schema.sql
         relativeToChangelogFile: true
+      rollback:
+        sqlFile:
+          dbms: postgresql
+          path: rollbacks/U1.0.0_initial-schema.sql
+          relativeToChangelogFile: true
 
   - changeSet:
       author: kevin.fabian
@@ -22,3 +27,8 @@ databaseChangeLog:
         dbms: 'postgresql'
         path: rollouts/V1.0.1_grants.sql
         relativeToChangelogFile: true
+      rollback:
+        sqlFile:
+          dbms: postgresql
+          path: rollbacks/U1.0.1_grants.sql
+          relativeToChangelogFile: true

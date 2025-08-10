@@ -1,0 +1,46 @@
+title OTP Authentication Flow
+
+
+actor caller
+participant "Otp Service" as otp
+participant "Database" as DB
+participant "Email Client" as email
+participant "SMS Client" as sms
+participant "Push Notification" as push
+
+== Request OTP ==
+caller->otp: Request OTP
+otp->DB: Check database if OTP request exists
+alt Has active OTP request
+    otp->caller: Return the OTP request
+else New OTP request
+    otp->otp: Generate Otp code
+    otp->otp: Build model and validate
+    otp->db: Save the OTP request to database
+    alt Email
+      otp->email: Send the OTP via email
+    else SMS
+      otp->email: Send the OTP via SMS
+    else PUSH
+      otp->email: Send the OTP via Push Notification
+    otp->caller: Return the OTP request
+    end
+end
+
+== Verify OTP ==
+caller->otp: Sends OTP code
+otp->db: Retrieve the OTP from the database
+
+alt Otp does not exist
+   otp->caller: OTP found exception
+else Otp is used
+  otp->caller: OTP already verified exception
+else Otp is expired
+  otp->caller: OTP expired request exception
+else Otp max atemmpt is reached
+  otp->caller: OTP max attempts exception
+end
+
+alt Valid OTP code
+  otp->caller: Http 200 OK
+end

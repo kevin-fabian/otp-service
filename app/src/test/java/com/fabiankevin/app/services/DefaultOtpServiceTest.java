@@ -40,7 +40,7 @@ class DefaultOtpServiceTest {
         mockedCommand = GenerateOtpCommand.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
-                .userIdentifier("test@test.com")
+                .recipient("test@test.com")
                 .metadata("{}")
                 .build();
         when(otpProperties.getCodeLength()).thenReturn(6);
@@ -59,7 +59,7 @@ class DefaultOtpServiceTest {
 
         // Assertions for the Otp object
         assertEquals("123456", otpArgumentCaptorValue.otpCode(), "OTP code should match generated code");
-        assertEquals(mockedCommand.userIdentifier(), otpArgumentCaptorValue.userIdentifier(), "User identifier should match command");
+        assertEquals(mockedCommand.recipient(), otpArgumentCaptorValue.recipient(), "Recipient should match command");
         assertEquals(mockedCommand.purpose(), otpArgumentCaptorValue.purpose(), "Purpose should match command");
         assertEquals(OtpStatus.ACTIVE, otpArgumentCaptorValue.status(), "Status should match command");
         assertEquals(mockedCommand.deliveryMethod(), otpArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
@@ -74,7 +74,7 @@ class DefaultOtpServiceTest {
         assertNull(otpArgumentCaptorValue.id(), "ID should not be null");
         assertEquals("{}", otpArgumentCaptorValue.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
@@ -82,13 +82,13 @@ class DefaultOtpServiceTest {
     @Test
     void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
         Otp otp = generateOtp("test@test.com", "123456");
-        when(otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier()))
+        when(otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient()))
                 .thenReturn(Optional.of(otp));
         Otp result = otpService.generate(mockedCommand);
 
         // Assertions for the Otp object
         assertEquals("123456", result.otpCode(), "OTP code should match generated code");
-        assertEquals(otp.userIdentifier(), result.userIdentifier(), "User identifier should match command");
+        assertEquals(otp.recipient(), result.recipient(), "Recipient should match command");
         assertEquals(otp.purpose(), result.purpose(), "Purpose should match command");
         assertEquals(OtpStatus.ACTIVE, result.status(), "Status should match command");
         assertEquals(otp.deliveryMethod(), result.deliveryMethod(), "Delivery method should match command");
@@ -103,7 +103,7 @@ class DefaultOtpServiceTest {
         assertEquals(otp.id(), result.id(), "ID should match existing ID");
         assertEquals("test metadata", result.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
@@ -117,7 +117,7 @@ class DefaultOtpServiceTest {
                     .build());
         }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.userIdentifier());
+        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 
@@ -239,13 +239,13 @@ class DefaultOtpServiceTest {
     }
 
 
-    private static Otp generateOtp(String userIdentifier, String otpCode) {
+    private static Otp generateOtp(String recipient, String otpCode) {
         OffsetDateTime now = OffsetDateTime.now();
         return Otp.builder()
                 .id(UUID.randomUUID())
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
-                .userIdentifier(userIdentifier)
+                .recipient(recipient)
                 .status(OtpStatus.ACTIVE)
                 .metadata("test metadata")
                 .attemptCount(0)

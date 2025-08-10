@@ -43,7 +43,7 @@ class OtpControllerTest {
                 .id(UUID.randomUUID())
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
-                .userIdentifier("test@test.com")
+                .recipient("test@test.com")
                 .status(OtpStatus.ACTIVE)
                 .metadata("test metadata")
                 .attemptCount(0)
@@ -62,7 +62,7 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "user_identifier": "test@test.com",
+                                   "recipient": "test@test.com",
                                    "purpose": "LOGIN",
                                    "delivery_method": "EMAIL",
                                    "metadata": "test metadata"
@@ -82,7 +82,7 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "user_identifier": "test@test.com",
+                                   "recipient": "test@test.com",
                                    "purpose": "INVALID_PURPOSE",
                                    "delivery_method": "EMAIL",
                                    "metadata": "test metadata"
@@ -101,7 +101,7 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "user_identifier": "test@test.com",
+                                   "recipient": "test@test.com",
                                    "purpose": "LOGIN",
                                    "delivery_method": "INVALID_METHOD",
                                    "metadata": "test metadata"
@@ -120,7 +120,7 @@ class OtpControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "user_identifier": "",
+                                   "recipient": "",
                                    "purpose": "LOGIN",
                                    "delivery_method": "EMAIL",
                                    "metadata": "test metadata"

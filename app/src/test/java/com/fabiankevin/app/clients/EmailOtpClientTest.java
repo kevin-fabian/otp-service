@@ -33,7 +33,7 @@ class EmailOtpClientTest {
         mockedOtp = Otp.builder()
                 .id(UUID.randomUUID())
                 .otpCode("123456")
-                .userIdentifier("test@example.com")
+                .recipient("test@example.com")
                 .purpose(OtpPurpose.LOGIN)
                 .status(OtpStatus.ACTIVE)
                 .createdAt(OffsetDateTime.now())

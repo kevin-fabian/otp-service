@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -22,11 +21,9 @@ import java.util.UUID;
 class DefaultOtpRepositoryTest {
     @Autowired
     private OtpRepository otpRepository;
-
     @Autowired
     private JpaOtpRepository jpaOtpRepository;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+
     private Otp mockedOtp;
 
     @TestConfiguration
@@ -43,7 +40,7 @@ class DefaultOtpRepositoryTest {
         mockedOtp = Otp.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
-                .userIdentifier("test@test.com")
+                .recipient("test@test.com")
                 .status(OtpStatus.ACTIVE)
                 .metadata("{}")
                 .attemptCount(0)
@@ -94,7 +91,7 @@ class DefaultOtpRepositoryTest {
     void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
         Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.userIdentifier());
+        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.recipient());
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
@@ -109,7 +106,7 @@ class DefaultOtpRepositoryTest {
                 .build();
         otpRepository.saveAndFlush(mockedOtp);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.userIdentifier());
+        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.recipient());
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }

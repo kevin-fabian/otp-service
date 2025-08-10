@@ -13,7 +13,7 @@ import java.util.UUID;
 public record Otp(
         UUID id,
         String otpCode,
-        String userIdentifier,
+        String recipient,
         OtpPurpose purpose,
         OtpStatus status,
         OffsetDateTime createdAt,
@@ -25,7 +25,7 @@ public record Otp(
 ) {
     public Otp {
         Objects.requireNonNull(otpCode, "otpCode must not be null");
-        Objects.requireNonNull(userIdentifier, "userIdentifier must not be null");
+        Objects.requireNonNull(recipient, "recipient must not be null");
         Objects.requireNonNull(purpose, "purpose must not be null");
         Objects.requireNonNull(status, "status must not be null");
         Objects.requireNonNull(createdAt, "createdAt must not be null");
@@ -34,8 +34,8 @@ public record Otp(
         if (otpCode.isBlank()) {
             throw new IllegalArgumentException("otpCode must not be blank");
         }
-        if (userIdentifier.isBlank()) {
-            throw new IllegalArgumentException("userIdentifier must not be blank");
+        if (recipient.isBlank()) {
+            throw new IllegalArgumentException("recipient must not be blank");
         }
         if (attemptCount < 0) {
             throw new IllegalArgumentException("attemptCount must not be negative");

@@ -14,7 +14,7 @@ import java.util.UUID;
 @Entity(name = "otps")
 @Table(name = "otps", indexes = {
         @Index(name = "otps_otp_code_idx", columnList = "otp_code"),
-        @Index(name = "otps_user_identifier_idx", columnList = "user_identifier")
+        @Index(name = "otps_recipient_idx", columnList = "recipient")
 })
 public class OtpEntity {
     @Id
@@ -25,8 +25,8 @@ public class OtpEntity {
     @Column(name = "otp_code", nullable = false)
     private String otpCode;
 
-    @Column(name = "user_identifier", nullable = false)
-    private String userIdentifier;
+    @Column(name = "recipient", nullable = false)
+    private String recipient;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "purpose", nullable = false)
@@ -59,7 +59,7 @@ public class OtpEntity {
         return Otp.builder()
                 .id(id)
                 .otpCode(otpCode)
-                .userIdentifier(userIdentifier)
+                .recipient(recipient)
                 .purpose(purpose)
                 .status(status)
                 .createdAt(createdAt)
@@ -75,7 +75,7 @@ public class OtpEntity {
         OtpEntity entity = new OtpEntity();
         entity.setId(otp.id());
         entity.setOtpCode(otp.otpCode());
-        entity.setUserIdentifier(otp.userIdentifier());
+        entity.setRecipient(otp.recipient());
         entity.setPurpose(otp.purpose());
         entity.setStatus(otp.status());
         entity.setCreatedAt(otp.createdAt());

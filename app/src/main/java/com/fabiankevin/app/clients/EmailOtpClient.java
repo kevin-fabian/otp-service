@@ -23,7 +23,7 @@ public class EmailOtpClient implements OtpClient {
 
     @Override
     public void send(Otp otp) {
-        String to = otp.userIdentifier();
+        String to = otp.recipient();
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

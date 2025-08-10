@@ -28,14 +28,14 @@ public class DefaultOtpService implements OtpService {
     @Override
     @Transactional
     public Otp generate(GenerateOtpCommand command) {
-        return otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(command.userIdentifier())
+        return otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(command.recipient())
                 .orElseGet(() -> {
                     OffsetDateTime now = OffsetDateTime.now();
                     String otpCode = otpGenerator.generateCode(properties.getCodeLength());
                     Otp otp = Otp.builder()
                             .deliveryMethod(command.deliveryMethod())
                             .purpose(command.purpose())
-                            .userIdentifier(command.userIdentifier())
+                            .recipient(command.recipient())
                             .metadata(command.metadata())
                             .status(OtpStatus.ACTIVE)
                             .otpCode(otpCode)

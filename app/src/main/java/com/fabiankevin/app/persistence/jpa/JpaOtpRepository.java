@@ -9,5 +9,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface JpaOtpRepository extends JpaRepository<OtpEntity, UUID> {
-    Optional<OtpEntity> findByUserIdentifierAndStatusAndExpiresAtGreaterThan(String userIdentifier, OtpStatus status, OffsetDateTime now);
+    Optional<OtpEntity> findByRecipientAndStatusAndExpiresAtGreaterThan(String recipient, OtpStatus status, OffsetDateTime now);
 }
