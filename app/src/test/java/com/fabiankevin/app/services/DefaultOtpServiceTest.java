@@ -74,7 +74,7 @@ class DefaultOtpServiceTest {
         assertNull(otpArgumentCaptorValue.id(), "ID should not be null");
         assertEquals("{}", otpArgumentCaptorValue.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
@@ -82,7 +82,7 @@ class DefaultOtpServiceTest {
     @Test
     void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
         Otp otp = generateOtp("test@test.com", "123456");
-        when(otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient()))
+        when(otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient()))
                 .thenReturn(Optional.of(otp));
         Otp result = otpService.generate(mockedCommand);
 
@@ -103,7 +103,7 @@ class DefaultOtpServiceTest {
         assertEquals(otp.id(), result.id(), "ID should match existing ID");
         assertEquals("test metadata", result.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
@@ -117,7 +117,7 @@ class DefaultOtpServiceTest {
                     .build());
         }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpRepository, times(1)).retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 

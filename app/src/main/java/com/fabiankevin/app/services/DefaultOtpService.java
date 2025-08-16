@@ -28,7 +28,7 @@ public class DefaultOtpService implements OtpService {
     @Override
     @Transactional
     public Otp generate(GenerateOtpCommand command) {
-        return otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(command.recipient())
+        return otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(command.recipient())
                 .orElseGet(() -> {
                     OffsetDateTime now = OffsetDateTime.now();
                     String otpCode = otpGenerator.generateCode(properties.getCodeLength());

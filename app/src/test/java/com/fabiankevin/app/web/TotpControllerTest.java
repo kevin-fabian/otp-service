@@ -108,7 +108,7 @@ class TotpControllerTest {
 
     @Test
     void verify_givenValidRequest_thenShouldVerifySuccessfully() throws Exception {
-        mockMvc.perform(post("/api/v1/totp/verification")
+        mockMvc.perform(post("/v1/totp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -123,7 +123,7 @@ class TotpControllerTest {
 
     @Test
     void verify_givenInvalidRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/totp/verification")
+        mockMvc.perform(post("/v1/totp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
@@ -137,7 +137,7 @@ class TotpControllerTest {
 
         doThrow(new TotpUnregisteredException()).when(totpService).verifyTotp(invalidUserReferenceId, code);
 
-        mockMvc.perform(post("/api/v1/totp/verification")
+        mockMvc.perform(post("/v1/totp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

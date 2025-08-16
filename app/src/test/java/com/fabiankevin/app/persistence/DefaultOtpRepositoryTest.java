@@ -88,10 +88,10 @@ class DefaultOtpRepositoryTest {
     }
 
     @Test
-    void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
+    void retrieveRecipientAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
         Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.recipient());
+        Optional<Otp> retrievedOtp = otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtp.recipient());
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
@@ -100,20 +100,20 @@ class DefaultOtpRepositoryTest {
     }
 
     @Test
-    void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
+    void retrieveRecipientAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
         mockedOtp = mockedOtp.toBuilder()
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
         otpRepository.saveAndFlush(mockedOtp);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired(mockedOtp.recipient());
+        Optional<Otp> retrievedOtp = otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtp.recipient());
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
-    void retrieveByUserIdentifierAndActiveStatusAndNotExpired_givenNonExistingUserIdentifier_thenShouldReturnEmpty() {
-        Optional<Otp> retrievedOtp = otpRepository.retrieveByUserIdentifierAndActiveStatusAndNotExpired("nonexistent@test.com");
+    void retrieveRecipient_thenShouldReturnEmpty() {
+        Optional<Otp> retrievedOtp = otpRepository.retrieveRecipientAndActiveStatusAndNotExpired("nonexistent@test.com");
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }

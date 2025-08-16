@@ -58,7 +58,7 @@ class OtpControllerTest {
         when(otpService.generate(any()))
                 .thenReturn(mockedOtp);
 
-        mockMvc.perform(post("/api/v1/otp")
+        mockMvc.perform(post("/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -78,7 +78,7 @@ class OtpControllerTest {
 
     @Test
     void generateOtp_givenInvalidPurpose_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/otp")
+        mockMvc.perform(post("/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -97,7 +97,7 @@ class OtpControllerTest {
 
     @Test
     void generateOtp_givenInvalidDeliveryMethod_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/otp")
+        mockMvc.perform(post("/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -116,7 +116,7 @@ class OtpControllerTest {
 
     @Test
     void generateOtp_givenInvalidUserIdentifier_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/otp")
+        mockMvc.perform(post("/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -135,7 +135,7 @@ class OtpControllerTest {
     void verifyOtp_givenValidRequest_thenShouldPassVerification() throws Exception {
         doNothing().when(otpService).verify(any());
 
-        mockMvc.perform(post("/api/v1/otp/verification")
+        mockMvc.perform(post("/v1/otp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -150,7 +150,7 @@ class OtpControllerTest {
 
     @Test
     void verifyOtp_givenInvalidOtpCode_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/otp/verification")
+        mockMvc.perform(post("/v1/otp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -168,7 +168,7 @@ class OtpControllerTest {
 
     @Test
     void verifyOtp_givenInvalidReferenceId_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/otp/verification")
+        mockMvc.perform(post("/v1/otp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -188,7 +188,7 @@ class OtpControllerTest {
     void verifyOtp_givenOtpNotFound_thenShouldReturnNotFound() throws Exception {
         doThrow(new OtpNotFoundException()).when(otpService).verify(any());
 
-        mockMvc.perform(post("/api/v1/otp/verification")
+        mockMvc.perform(post("/v1/otp/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

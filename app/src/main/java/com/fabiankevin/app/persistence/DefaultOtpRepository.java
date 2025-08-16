@@ -17,7 +17,7 @@ public class DefaultOtpRepository implements OtpRepository {
 
     @Override
     public Otp saveAndFlush(Otp otp) {
-        return jpaOtpRepository.saveAndFlush( OtpEntity.fromModel(otp)).toModel();
+        return jpaOtpRepository.saveAndFlush(OtpEntity.fromModel(otp)).toModel();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class DefaultOtpRepository implements OtpRepository {
     }
 
     @Override
-    public Optional<Otp> retrieveByUserIdentifierAndActiveStatusAndNotExpired(String recipient) {
+    public Optional<Otp> retrieveRecipientAndActiveStatusAndNotExpired(String recipient) {
         return jpaOtpRepository.findByRecipientAndStatusAndExpiresAtGreaterThan(recipient,
                         OtpStatus.ACTIVE,
                         OffsetDateTime.now())

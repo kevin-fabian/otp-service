@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/otp")
+@RequestMapping("/v1/otp")
 @RequiredArgsConstructor
 public class OtpController {
     private final OtpService otpService;
@@ -39,7 +39,7 @@ public class OtpController {
         return OtpResponse.from(otpService.generate(otpRequest.toCommand()));
     }
 
-    @PostMapping("/verification")
+    @PostMapping("/verify")
     @Operation(summary = "Verify OTP",
             description = "Verifies the provided OTP code.",
             responses = {

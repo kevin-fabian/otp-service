@@ -88,8 +88,8 @@ API documentation is available via Swagger UI:
 
 ### OTP Management
 
-- `POST /api/v1/otp` - Generate new OTP
-- `POST /api/v1/otp/validation` - Validate OTP(Not yet implemented)
+- `POST /v1/otp` - Generate new OTP
+- `POST /v1/otp/verify` - Validate OTP(Not yet implemented)
 
 ## Configuration
 

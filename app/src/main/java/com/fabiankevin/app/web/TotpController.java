@@ -19,12 +19,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/totp")
+@RequestMapping("/v1/totp")
 @RequiredArgsConstructor
 public class TotpController {
     private final TotpService totpService;
 
-    @PostMapping("/users/registration")
+    @PostMapping("/users/register")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Register TOTP",
             description = "Registers a new TOTP for the provided user reference.",
@@ -59,7 +59,7 @@ public class TotpController {
                 .body(totpService.getQrCodeImageByUserReferenceId(userReferenceId));
     }
 
-    @PostMapping("/verification")
+    @PostMapping("/verify")
     @Operation(summary = "Verify TOTP",
             description = "Verifies the provided TOTP code.",
             responses = {
