@@ -4,6 +4,7 @@ import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
+import com.fabiankevin.app.persistence.entities.OtpEntity;
 import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

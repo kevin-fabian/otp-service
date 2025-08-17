@@ -12,7 +12,7 @@ import org.thymeleaf.TemplateEngine;
 public class EmailConfig {
 
     @Bean
-    @Profile("!local") // Exclude this bean in local profile
+    @Profile("!local-h2") // Exclude this bean in local profile
     public EmailOtpClient emailOtpClient(JavaMailSender javaMailSender, TemplateEngine templateEngine, OtpProperties otpProperties){
         return new EmailOtpClient(javaMailSender, templateEngine, "OTP", otpProperties.getExpirationMinutes());
     }

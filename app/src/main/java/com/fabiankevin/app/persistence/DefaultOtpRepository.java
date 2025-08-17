@@ -2,6 +2,7 @@ package com.fabiankevin.app.persistence;
 
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.OtpStatus;
+import com.fabiankevin.app.persistence.entities.OtpEntity;
 import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

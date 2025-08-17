@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("local")
+@Profile("local-h2")
 @Slf4j
 // This class is used in local development to avoid sending real emails.
 public class LocalEmailOtpClient implements OtpClient {

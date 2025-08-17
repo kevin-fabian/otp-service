@@ -5,24 +5,24 @@ spring:
   application:
     name: otp-service
   profiles:
-    active: h2
+    active: local-h2
   threads:
     virtual:
       enabled: true
   jackson:
     property-naming-strategy: SNAKE_CASE
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: test@gmail.com
-    password: test
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: test@gmail.com
+#    password: test
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
+#            required: true
 
 management:
   endpoints:

@@ -1,6 +1,7 @@
 package com.fabiankevin.app.persistence;
 
 import com.fabiankevin.app.models.TotpUser;
+import com.fabiankevin.app.persistence.entities.TotpUserEntity;
 import com.fabiankevin.app.persistence.jpa.JpaTotpUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

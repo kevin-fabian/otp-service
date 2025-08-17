@@ -1,4 +1,4 @@
-package com.fabiankevin.app.persistence;
+package com.fabiankevin.app.persistence.entities;
 
 import com.fabiankevin.app.models.TotpUser;
 import jakarta.persistence.*;
