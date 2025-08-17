@@ -49,7 +49,7 @@ class TotpControllerTest {
         when(totpService.registerTotp(any()))
                 .thenReturn(registeredTotpUser);
 
-        mockMvc.perform(post("/api/v1/totp/users/registration")
+        mockMvc.perform(post("/v1/totp/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"user_reference_id": "validUserReferenceId"}
@@ -62,7 +62,7 @@ class TotpControllerTest {
 
     @Test
     void register_givenInvalidRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/totp/users/registration")
+        mockMvc.perform(post("/v1/totp/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andDo(print())
@@ -73,7 +73,7 @@ class TotpControllerTest {
 
     @Test
     void register_givenNullRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/totp/users/registration")
+        mockMvc.perform(post("/v1/totp/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("null"))
                 .andExpect(status().isBadRequest());
@@ -87,7 +87,7 @@ class TotpControllerTest {
 
         when(totpService.getQrCodeImageByUserReferenceId(validUserReferenceId)).thenReturn(qrCodeImage);
 
-        mockMvc.perform(get("/api/v1/totp/qr/{userReferenceId}", validUserReferenceId)
+        mockMvc.perform(get("/v1/totp/qr/{userReferenceId}", validUserReferenceId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertEquals(MediaType.IMAGE_PNG_VALUE, result.getResponse().getContentType(), "Content type should be PNG image"))
@@ -100,7 +100,7 @@ class TotpControllerTest {
 
         when(totpService.getQrCodeImageByUserReferenceId(invalidUserReferenceId)).thenThrow(new TotpUnregisteredException());
 
-        mockMvc.perform(get("/api/v1/totp/qr/" + invalidUserReferenceId)
+        mockMvc.perform(get("/v1/totp/qr/" + invalidUserReferenceId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.details").value("Unregistered"));
