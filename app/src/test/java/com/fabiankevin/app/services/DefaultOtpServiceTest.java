@@ -238,6 +238,27 @@ class DefaultOtpServiceTest {
         verify(otpRepository, times(1)).save(any(Otp.class));
     }
 
+    @Test
+    void retrieveById_givenValidOtpId_thenShouldReturnOtp() {
+        Otp otp = generateOtp("test@test.com", "123456");
+        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+
+        Otp result = otpService.retrieveById(otp.id());
+
+        assertEquals(otp, result, "Should return the correctly retrieved OTP");
+        verify(otpRepository, times(1)).retrieveById(otp.id());
+    }
+
+    @Test
+    void retrieveById_givenNonExistingOtpId_thenShouldThrowException() {
+        UUID randomId = UUID.randomUUID();
+        when(otpRepository.retrieveById(randomId)).thenReturn(Optional.empty());
+
+        assertThrows(OtpNotFoundException.class, () -> otpService.retrieveById(randomId),
+                "Should throw OtpNotFoundException when OTP does not exist");
+
+        verify(otpRepository, times(1)).retrieveById(randomId);
+    }
 
     private static Otp generateOtp(String recipient, String otpCode) {
         OffsetDateTime now = OffsetDateTime.now();
