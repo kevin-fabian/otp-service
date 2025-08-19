@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/v1/otp")
 @RequiredArgsConstructor
@@ -56,5 +58,19 @@ public class OtpController {
             @RequestBody
             OtpVerificationRequest request) {
         otpService.verify(request.toCommand());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Retrieve OTP by ID",
+            description = "Retrieves the OTP details by its ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OTP retrieved successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = OtpResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Otp not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            })
+    public OtpResponse retrieveById(@PathVariable UUID id) {
+        return OtpResponse.from(otpService.retrieveById(id));
     }
 }

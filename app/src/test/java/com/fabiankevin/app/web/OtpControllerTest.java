@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,6 +49,7 @@ class OtpControllerTest {
                 .metadata("test metadata")
                 .attemptCount(0)
                 .createdAt(now)
+                .updatedAt(now)
                 .expiresAt(now.plusMinutes(1))
                 .otpCode("123456")
                 .build();
@@ -201,5 +203,39 @@ class OtpControllerTest {
                 .andExpect(jsonPath("$.message").value("Resource Error"));
 
         verify(otpService, times(1)).verify(any());
+    }
+
+    @Test
+    void retrieveById_givenValidId_thenShouldReturnOtpDetails() throws Exception {
+        when(otpService.retrieveById(any(UUID.class)))
+                .thenReturn(mockedOtp);
+
+        mockMvc.perform(get("/v1/otp/{id}", mockedOtp.id())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(mockedOtp.id().toString()))
+                .andExpect(jsonPath("$.recipient").value(mockedOtp.recipient()))
+                .andExpect(jsonPath("$.purpose").value(mockedOtp.purpose().name()))
+                .andExpect(jsonPath("$.delivery_method").value(mockedOtp.deliveryMethod().name()))
+                .andExpect(jsonPath("$.status").value(mockedOtp.status().name()))
+                .andExpect(jsonPath("$.updated_at").exists())
+                .andExpect(jsonPath("$.created_at").exists())
+                .andExpect(jsonPath("$.expired_at").exists());
+
+        verify(otpService, times(1)).retrieveById(mockedOtp.id());
+    }
+
+    @Test
+    void retrieveById_givenInvalidId_thenShouldReturnNotFound() throws Exception {
+        UUID invalidId = UUID.randomUUID();
+        doThrow(new OtpNotFoundException()).when(otpService).retrieveById(invalidId);
+
+        mockMvc.perform(get("/v1/otp/{id}", invalidId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Resource Error"))
+                .andExpect(jsonPath("$.details").value("Otp not found"));
+
+        verify(otpService, times(1)).retrieveById(invalidId);
     }
 }

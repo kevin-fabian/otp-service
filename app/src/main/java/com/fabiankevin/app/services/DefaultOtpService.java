@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -90,5 +91,11 @@ public class DefaultOtpService implements OtpService {
             case INVALIDATED -> throw new OtpAttemptLimitExceededException();
             default -> log.info("Otp has been verified.");
         }
+    }
+
+    @Override
+    public Otp retrieveById(UUID otpId) {
+        return otpRepository.retrieveById(otpId)
+                .orElseThrow(OtpNotFoundException::new);
     }
 }

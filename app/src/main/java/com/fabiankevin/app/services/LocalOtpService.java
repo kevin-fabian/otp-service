@@ -1,22 +1,22 @@
 package com.fabiankevin.app.services;
 
+import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.persistence.OtpRepository;
-import com.fabiankevin.app.services.commands.GenerateOtpCommand;
+import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.commands.VerifyOtpCommand;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 @Slf4j
-@RequiredArgsConstructor
-public class LocalOtpService implements OtpService {
-    private final OtpService otpService;
+public class LocalOtpService extends DefaultOtpService {
     private final OtpRepository otpRepository;
 
-    @Override
-    public Otp generate(GenerateOtpCommand command) {
-        return otpService.generate(command);
+    public LocalOtpService(OtpRepository otpRepository, Map<DeliveryMethod, OtpClient> otpClientMap, OtpGenerator otpGenerator, OtpProperties properties) {
+        super(otpRepository, otpClientMap, otpGenerator, properties);
+        this.otpRepository = otpRepository;
     }
 
     @Override
