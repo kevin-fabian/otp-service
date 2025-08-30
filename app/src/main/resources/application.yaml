@@ -11,18 +11,16 @@ spring:
       enabled: true
   jackson:
     property-naming-strategy: SNAKE_CASE
-#  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: test@gmail.com
-#    password: test
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          starttls:
-#            enable: true
-#            required: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 management:
   endpoints:

@@ -12,6 +12,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  mail:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+
   h2:
     console:
       enabled: true
