@@ -1,47 +1,61 @@
 package com.fabiankevin.app.web;
 
-import com.fabiankevin.app.exceptions.OtpNotFoundException;
+import com.fabiankevin.app.clients.EmailOtpClient;
 import com.fabiankevin.app.models.Otp;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
+import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.services.OtpService;
-import com.github.fabiankevin.microwebspringbootstarter.MicrowebAutoConfiguration;
+import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(OtpController.class)
-@Import({MicrowebAutoConfiguration.class})
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class OtpControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockitoSpyBean
+    @Autowired
     private OtpService otpService;
 
+    @MockitoSpyBean
+    @Autowired
+    private OtpRepository otpRepository;
+
+    @MockitoBean
+    private EmailOtpClient emailOtpClient;
+
     private Otp mockedOtp;
+    private GenerateOtpCommand generateOtpCommand;
 
     @BeforeEach
     void setup() {
         OffsetDateTime now = OffsetDateTime.now();
         mockedOtp = Otp.builder()
-                .id(UUID.randomUUID())
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipient("test@test.com")
@@ -53,13 +67,16 @@ class OtpControllerTest {
                 .expiresAt(now.plusMinutes(1))
                 .otpCode("123456")
                 .build();
+        generateOtpCommand = GenerateOtpCommand.builder()
+                .deliveryMethod(DeliveryMethod.EMAIL)
+                .purpose(OtpPurpose.LOGIN)
+                .recipient("john.doe@test.com")
+                .metadata("some metadata")
+                .build();
     }
 
     @Test
     void generateOtp_givenValidRequest_thenShouldReturnOtpCode() throws Exception {
-        when(otpService.generate(any()))
-                .thenReturn(mockedOtp);
-
         mockMvc.perform(post("/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -71,9 +88,17 @@ class OtpControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(mockedOtp.id().toString()))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.recipient").value("test@test.com"))
+                .andExpect(jsonPath("$.purpose").value("LOGIN"))
+                .andExpect(jsonPath("$.delivery_method").value("EMAIL"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.metadata").value("test metadata"))
+                .andExpect(jsonPath("$.created_at").exists())
+                .andExpect(jsonPath("$.updated_at").exists())
                 .andExpect(jsonPath("$.expired_at").exists());
 
+        verify(emailOtpClient, times(1)).send(any());
         verify(otpService, times(1)).generate(any());
     }
 
@@ -117,7 +142,7 @@ class OtpControllerTest {
     }
 
     @Test
-    void generateOtp_givenInvalidUserIdentifier_thenShouldReturnBadRequest() throws Exception {
+    void generateOtp_givenInvalidRecipient_thenShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/v1/otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -135,85 +160,62 @@ class OtpControllerTest {
 
     @Test
     void verifyOtp_givenValidRequest_thenShouldPassVerification() throws Exception {
-        doNothing().when(otpService).verify(any());
+        Otp generatedOtp = otpService.generate(generateOtpCommand);
 
-        mockMvc.perform(post("/v1/otp/verify")
+        mockMvc.perform(post("/v1/otp/{otp}/verify", generatedOtp.id())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otp_code": "123456",
-                                   "reference_id": "c0a80123-4567-890a-bcde-f0123456789a"
+                                   "otp_code": "{{otp_code}}"
                                 }
-                                """))
-                .andExpect(status().isOk());
+                                """.replace("{{otp_code}}", generatedOtp.otpCode())))
+                .andExpect(status().isNoContent());
 
         verify(otpService, times(1)).verify(any());
+
+        Otp otp = otpRepository.retrieveById(generatedOtp.id()).get();
+        assertEquals(OtpStatus.VERIFIED, otp.status(), "Otp status should be VERIFIED");
     }
 
-    @Test
-    void verifyOtp_givenInvalidOtpCode_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/v1/otp/verify")
+    @ParameterizedTest
+    @ValueSource(strings = {"", "1", "123456"})
+    void verifyOtp_givenInvalidOtpCode_thenShouldReturnBadRequest(String invalidOtpCode) throws Exception {
+        Otp generatedOtp = otpService.generate(generateOtpCommand);
+
+        mockMvc.perform(post("/v1/otp/{id}/verify", generatedOtp.id())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otp_code": "",
-                                   "reference_id": "c0a80123-4567-890a-bcde-f0123456789a"
+                                   "otp_code": "{{otp_code}}"
                                 }
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.errors[0]").value("OTP code must be a string up to 6 digits"))
-                .andExpect(jsonPath("$.details").doesNotExist());
-
-        verify(otpService, never()).verify(any());
-    }
-
-    @Test
-    void verifyOtp_givenInvalidReferenceId_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/v1/otp/verify")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                   "otp_code": "123456",
-                                   "reference_id": ""
-                                }
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.errors[0]").value("Reference ID must not be null"))
-                .andExpect(jsonPath("$.details").doesNotExist());
-
-        verify(otpService, never()).verify(any());
+                                """.replace("{{otp_code}}", invalidOtpCode)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void verifyOtp_givenOtpNotFound_thenShouldReturnNotFound() throws Exception {
-        doThrow(new OtpNotFoundException()).when(otpService).verify(any());
+        otpService.generate(generateOtpCommand);
 
-        mockMvc.perform(post("/v1/otp/verify")
+        mockMvc.perform(post("/v1/otp/{id}/verify", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                   "otp_code": "123456",
-                                   "reference_id": "c0a80123-4567-890a-bcde-f0123456789a"
+                                   "otp_code": "123456"
                                 }
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.details").value("Otp not found"))
                 .andExpect(jsonPath("$.message").value("Resource Error"));
-
-        verify(otpService, times(1)).verify(any());
     }
 
     @Test
     void retrieveById_givenValidId_thenShouldReturnOtpDetails() throws Exception {
-        when(otpService.retrieveById(any(UUID.class)))
-                .thenReturn(mockedOtp);
+        Otp savedOtp = otpRepository.save(mockedOtp);
 
-        mockMvc.perform(get("/v1/otp/{id}", mockedOtp.id())
+        mockMvc.perform(get("/v1/otp/{id}", savedOtp.id())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(mockedOtp.id().toString()))
+                .andExpect(jsonPath("$.id").value(savedOtp.id().toString()))
                 .andExpect(jsonPath("$.recipient").value(mockedOtp.recipient()))
                 .andExpect(jsonPath("$.purpose").value(mockedOtp.purpose().name()))
                 .andExpect(jsonPath("$.delivery_method").value(mockedOtp.deliveryMethod().name()))
@@ -222,13 +224,12 @@ class OtpControllerTest {
                 .andExpect(jsonPath("$.created_at").exists())
                 .andExpect(jsonPath("$.expired_at").exists());
 
-        verify(otpService, times(1)).retrieveById(mockedOtp.id());
+        verify(otpService, times(1)).retrieveById(savedOtp.id());
     }
 
     @Test
     void retrieveById_givenInvalidId_thenShouldReturnNotFound() throws Exception {
         UUID invalidId = UUID.randomUUID();
-        doThrow(new OtpNotFoundException()).when(otpService).retrieveById(invalidId);
 
         mockMvc.perform(get("/v1/otp/{id}", invalidId)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -237,5 +238,32 @@ class OtpControllerTest {
                 .andExpect(jsonPath("$.details").value("Otp not found"));
 
         verify(otpService, times(1)).retrieveById(invalidId);
+    }
+
+    @Test
+    void markOtpAsUsed_givenValidId_thenShouldUpdateStatusToUsedAndReturnNoContent() throws Exception {
+        Otp savedOtp = otpRepository.save(mockedOtp.withStatus(OtpStatus.VERIFIED));
+
+        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", savedOtp.id())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        verify(otpService, times(1)).markAsUsed(savedOtp.id());
+
+        Otp otp = otpRepository.retrieveById(savedOtp.id()).get();
+        assertEquals(OtpStatus.USED, otp.status(), "Otp status should be USED");
+    }
+
+    @Test
+    void markOtpAsUsed_givenInvalidId_thenShouldReturnNotFound() throws Exception {
+        UUID invalidId = UUID.randomUUID();
+
+        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", invalidId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Resource Error"))
+                .andExpect(jsonPath("$.details").value("Otp not found"));
+
+        verify(otpRepository, times(0)).save(any());
     }
 }

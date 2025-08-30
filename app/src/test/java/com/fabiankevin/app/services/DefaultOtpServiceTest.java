@@ -201,7 +201,7 @@ class DefaultOtpServiceTest {
                 .attemptCount(2)
                 .build());
         when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
-        when(otp.isUsed()).thenReturn(true);
+        when(otp.isActive()).thenReturn(false);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(otp.id())

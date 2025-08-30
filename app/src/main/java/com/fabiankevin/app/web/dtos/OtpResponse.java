@@ -18,6 +18,7 @@ public record OtpResponse(
         OtpPurpose purpose,
         OtpStatus status,
         DeliveryMethod deliveryMethod,
+        String metadata,
         Instant createdAt,
         OffsetDateTime updatedAt,
         @Schema(description = "Date and time when OTP will expire", example = "2024-03-01T12:00:00.000+00:00")
@@ -33,6 +34,7 @@ public record OtpResponse(
                 .createdAt(otp.createdAt().toInstant())
                 .updatedAt(otp.updatedAt())
                 .expiredAt(otp.expiresAt())
+                .metadata(otp.metadata())
                 .build();
     }
 }

@@ -42,6 +42,7 @@ public class DefaultOtpService implements OtpService {
                             .otpCode(otpCode)
                             .attemptCount(0)
                             .createdAt(now)
+                            .updatedAt(now)
                             .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                             .build();
 
@@ -60,8 +61,8 @@ public class DefaultOtpService implements OtpService {
     public void verify(VerifyOtpCommand command) {
         Otp savedOtp = otpRepository.retrieveById(command.id())
                 .map(otp -> {
-                    if (otp.isUsed()) {
-                        throw new OtpAlreadyVerifiedException();
+                    if (!otp.isActive()) {
+                        throw new OtpInvalidStateException();
                     }
 
                     int attempts = otp.attemptCount();
@@ -72,7 +73,7 @@ public class DefaultOtpService implements OtpService {
                         otpBuilder.status(OtpStatus.EXPIRED);
                     } else {
                         if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
-                            otpBuilder.status(OtpStatus.USED).build();
+                            otpBuilder.status(OtpStatus.VERIFIED).build();
                         }
 
                         attempts = otp.attemptCount() + 1;
@@ -97,5 +98,23 @@ public class DefaultOtpService implements OtpService {
     public Otp retrieveById(UUID otpId) {
         return otpRepository.retrieveById(otpId)
                 .orElseThrow(OtpNotFoundException::new);
+    }
+
+    @Override
+    public void markAsUsed(UUID otpId) {
+        otpRepository.retrieveById(otpId)
+                .ifPresentOrElse(otp -> {
+                            if (otp.status() == OtpStatus.VERIFIED) {
+                                otpRepository.save(otp.toBuilder()
+                                        .status(OtpStatus.USED)
+                                        .updatedAt(OffsetDateTime.now())
+                                        .build());
+                            } else {
+                                throw new OtpInvalidStateException();
+                            }
+                        },
+                        () -> {
+                            throw new OtpNotFoundException();
+                        });
     }
 }

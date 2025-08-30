@@ -4,12 +4,16 @@ import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import lombok.Builder;
+import lombok.With;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+import static com.fabiankevin.app.models.enums.OtpStatus.ACTIVE;
+
 @Builder(toBuilder = true)
+@With
 public record Otp(
         UUID id,
         String otpCode,
@@ -42,7 +46,7 @@ public record Otp(
         }
     }
 
-    public boolean isUsed() {
-        return status == OtpStatus.USED;
+    public boolean isActive(){
+        return ACTIVE == status;
     }
 }

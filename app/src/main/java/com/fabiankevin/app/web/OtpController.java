@@ -1,6 +1,7 @@
 package com.fabiankevin.app.web;
 
 import com.fabiankevin.app.services.OtpService;
+import com.fabiankevin.app.services.commands.VerifyOtpCommand;
 import com.fabiankevin.app.web.dtos.OtpRequest;
 import com.fabiankevin.app.web.dtos.OtpResponse;
 import com.fabiankevin.app.web.dtos.OtpVerificationRequest;
@@ -41,22 +42,24 @@ public class OtpController {
         return OtpResponse.from(otpService.generate(otpRequest.toCommand()));
     }
 
-    @PostMapping("/verify")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/{otpId}/verify")
     @Operation(summary = "Verify OTP",
             description = "Verifies the provided OTP code.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "OK - Successfully verified OTP"),
+                    @ApiResponse(responseCode = "204", description = "NO Content - Successfully verified OTP"),
                     @ApiResponse(responseCode = "400", description = "Bad Request - User input is invalid"),
                     @ApiResponse(responseCode = "429", description = "Too Many Requests -  OTP attempt limit exceeded"),
                     @ApiResponse(responseCode = "404", description = "Not Found - OTP not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verifyOtp(
+            @PathVariable UUID otpId,
             @Parameter(description = "Otp verification request")
             @Valid
             @RequestBody
             OtpVerificationRequest request) {
-        otpService.verify(request.toCommand());
+        otpService.verify(new VerifyOtpCommand(otpId, request.otpCode()));
     }
 
     @GetMapping("/{id}")
@@ -71,5 +74,18 @@ public class OtpController {
             })
     public OtpResponse retrieveById(@PathVariable UUID id) {
         return OtpResponse.from(otpService.retrieveById(id));
+    }
+
+    @PatchMapping("/{id}/mark-as-used")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Patch OTP status as used",
+            description = "Updates the OTP status to used.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "No Content - OTP status is set to USED successfully"),
+                    @ApiResponse(responseCode = "404", description = "Not Found - Otp not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
+            })
+    public void markOtpAsUsed(@PathVariable UUID id) {
+        otpService.markAsUsed(id);
     }
 }

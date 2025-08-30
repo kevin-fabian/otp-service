@@ -1,7 +1,10 @@
 package com.fabiankevin.app.services;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Random;
 
+@Component
 public class DefaultOtpGenerator implements OtpGenerator {
     private final Random random = new Random();
     @Override
