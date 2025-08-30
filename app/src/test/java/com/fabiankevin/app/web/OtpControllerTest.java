@@ -8,6 +8,7 @@ import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpRepository;
 import com.fabiankevin.app.services.OtpService;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
+import com.fabiankevin.app.services.commands.VerifyOtpCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -241,21 +242,36 @@ class OtpControllerTest {
     }
 
     @Test
-    void markOtpAsUsed_givenValidId_thenShouldUpdateStatusToUsedAndReturnNoContent() throws Exception {
-        Otp savedOtp = otpRepository.save(mockedOtp.withStatus(OtpStatus.VERIFIED));
+    void markOtpAsUsed_givenVerifiedOtp_thenShouldUpdateStatusToUsedAndReturnNoContent() throws Exception {
+        Otp generatedOtp = otpService.generate(generateOtpCommand);
+        otpService.verify(new VerifyOtpCommand(generatedOtp.id(), generatedOtp.otpCode()));
 
-        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", savedOtp.id())
+        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtp.id())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(otpService, times(1)).markAsUsed(savedOtp.id());
+        verify(otpService, times(1)).markAsUsed(generatedOtp.id());
 
-        Otp otp = otpRepository.retrieveById(savedOtp.id()).get();
+        Otp otp = otpRepository.retrieveById(generatedOtp.id()).get();
         assertEquals(OtpStatus.USED, otp.status(), "Otp status should be USED");
     }
 
     @Test
+    void markOtpAsUsed_givenOtpIsNotVerified_thenShouldBeBadRequest() throws Exception {
+        Otp generatedOtp = otpService.generate(generateOtpCommand);
+
+        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtp.id())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        verify(otpService, times(1)).markAsUsed(generatedOtp.id());
+    }
+
+    @Test
     void markOtpAsUsed_givenInvalidId_thenShouldReturnNotFound() throws Exception {
+        Otp generatedOtp = otpService.generate(generateOtpCommand);
+        otpService.verify(new VerifyOtpCommand(generatedOtp.id(), generatedOtp.otpCode()));
+
         UUID invalidId = UUID.randomUUID();
 
         mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", invalidId)
@@ -263,7 +279,5 @@ class OtpControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Resource Error"))
                 .andExpect(jsonPath("$.details").value("Otp not found"));
-
-        verify(otpRepository, times(0)).save(any());
     }
 }

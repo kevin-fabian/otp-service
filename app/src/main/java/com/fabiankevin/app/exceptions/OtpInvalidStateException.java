@@ -1,7 +1,9 @@
 package com.fabiankevin.app.exceptions;
 
-public class OtpInvalidStateException extends RuntimeException {
+import com.github.fabiankevin.microwebspringbootstarter.exceptions.ApiException;
+
+public class OtpInvalidStateException extends ApiException {
     public OtpInvalidStateException() {
-        super("Invalid OTP state");
+        super("Invalid OTP state", 400);
     }
 }

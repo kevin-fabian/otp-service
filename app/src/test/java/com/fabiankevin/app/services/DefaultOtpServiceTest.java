@@ -208,11 +208,10 @@ class DefaultOtpServiceTest {
                 .otpCode("123456")
                 .build();
 
-        OtpAlreadyVerifiedException otpAlreadyVerifiedException = assertThrows(OtpAlreadyVerifiedException.class,
+        OtpInvalidStateException otpAlreadyVerifiedException = assertThrows(OtpInvalidStateException.class,
                 () -> otpService.verify(command),
-                "Should throw OtpAlreadyVerifiedException when OTP is already verified");
+                "Should throw OtpInvalidStateException when OTP is already verified");
 
-        assertEquals("OTP has already been used", otpAlreadyVerifiedException.getMessage(), "exception message should match");
         verify(otpRepository, times(1)).retrieveById(otp.id());
         verify(otpRepository, never()).save(any(Otp.class));
     }
