@@ -37,7 +37,7 @@ else Otp is used
   otp->caller: OTP already verified exception
 else Otp is expired
   otp->caller: OTP expired request exception
-else Otp max atemmpt is reached
+else Otp max attempts is reached
   otp->caller: OTP max attempts exception
 end
 
