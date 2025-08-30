@@ -24,14 +24,14 @@ public class OtpController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    @Operation(summary = "Generate OTP",
+    @Operation(summary = "Generate an One-Time Password (OTP)",
             description = "Generates a new OTP based on the provided request.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Successfully generated OTP",
+                    @ApiResponse(responseCode = "201", description = "Created - Successfully generated OTP",
                             content = @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = OtpResponse.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    @ApiResponse(responseCode = "400", description = "Bad Request - User input is invalid"),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error - An error occurred on the server")
             })
     public OtpResponse generateOtp(
             @Parameter(description = "Otp code request")
@@ -45,12 +45,11 @@ public class OtpController {
     @Operation(summary = "Verify OTP",
             description = "Verifies the provided OTP code.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Successfully verified OTP"),
-                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
-                    @ApiResponse(responseCode = "429", description = "OTP attempt limit exceeded", content = @Content),
-
-                    @ApiResponse(responseCode = "404", description = "OTP not found", content = @Content),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    @ApiResponse(responseCode = "200", description = "OK - Successfully verified OTP"),
+                    @ApiResponse(responseCode = "400", description = "Bad Request - User input is invalid"),
+                    @ApiResponse(responseCode = "429", description = "Too Many Requests -  OTP attempt limit exceeded"),
+                    @ApiResponse(responseCode = "404", description = "Not Found - OTP not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verifyOtp(
             @Parameter(description = "Otp verification request")
@@ -62,13 +61,13 @@ public class OtpController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Retrieve OTP by ID",
-            description = "Retrieves the OTP details by its ID.",
+            description = "Retrieves the OTP details by ID.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "OTP retrieved successfully",
+                    @ApiResponse(responseCode = "200", description = "OK - OTP retrieved successfully",
                             content = @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = OtpResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "Otp not found"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
+                    @ApiResponse(responseCode = "404", description = "Not Found - Otp not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public OtpResponse retrieveById(@PathVariable UUID id) {
         return OtpResponse.from(otpService.retrieveById(id));
