@@ -26,14 +26,14 @@ public class TotpController {
 
     @PostMapping("/users/register")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register TOTP",
-            description = "Registers a new TOTP for the provided user reference.",
+    @Operation(summary = "Register a user to Time-based One-Time Password (TOTP)",
+            description = "Registers a new TOTP for the provided user reference ID.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Successfully registered TOTP",
+                    @ApiResponse(responseCode = "201", description = "Created - Successfully registered a user to TOTP service",
                             content = @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = TotpResponse.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    @ApiResponse(responseCode = "400", description = "Bad Request - User input is invalid"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public TotpResponse register(
             @Parameter(description = "TOTP registration request")
@@ -46,10 +46,10 @@ public class TotpController {
     @Operation(summary = "Get QR Code",
             description = "Generates QR code image for TOTP setup.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Successfully generated QR code",
+                    @ApiResponse(responseCode = "200", description = "OK -Successfully generated QR code",
                             content = @Content(mediaType = MediaType.IMAGE_PNG_VALUE)),
-                    @ApiResponse(responseCode = "404", description = "User reference not found", content = @Content),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    @ApiResponse(responseCode = "404", description = "Not Found - User reference not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public ResponseEntity<byte[]> getQrCodeImage(
             @Parameter(description = "User reference ID")
@@ -63,10 +63,10 @@ public class TotpController {
     @Operation(summary = "Verify TOTP",
             description = "Verifies the provided TOTP code.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Successfully verified TOTP"),
-                    @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "TOTP user not found", content = @Content),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    @ApiResponse(responseCode = "200", description = "OK - Successfully verified TOTP"),
+                    @ApiResponse(responseCode = "400", description = "Bad Request - User input is invalid"),
+                    @ApiResponse(responseCode = "404", description = "Not Found - TOTP user not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verify(
             @Parameter(description = "TOTP verification request")
