@@ -1,5 +1,5 @@
 package com.fabiankevin.app.models.enums;
 
 public enum OtpStatus {
-    ACTIVE, USED, EXPIRED, INVALIDATED
+    ACTIVE, VERIFIED, USED, EXPIRED, INVALIDATED
 }
