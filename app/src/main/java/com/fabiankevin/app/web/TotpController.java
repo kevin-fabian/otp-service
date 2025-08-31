@@ -72,6 +72,7 @@ public class TotpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verify(
+            @Parameter(description = "TOTP user ID")
             @PathVariable UUID id,
             @Parameter(description = "TOTP verification request")
             @Valid @RequestBody VerifyOtpRequest request) {
