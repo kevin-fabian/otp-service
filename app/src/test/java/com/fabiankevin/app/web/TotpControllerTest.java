@@ -9,6 +9,7 @@ import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
 import com.fabiankevin.app.services.TotpCodeVerifier;
 import com.fabiankevin.app.services.TotpService;
 import com.fabiankevin.app.services.commands.RegisterTotpCommand;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -46,6 +47,11 @@ class TotpControllerTest {
 
     @Autowired
     private JpaOtpRepository jpaOtpRepository;
+
+    @BeforeEach
+    void reset(){
+        jpaOtpRepository.deleteAll();
+    }
 
     @Test
     void register_givenValidRequest_thenShouldReturnTotpResponse() throws Exception {

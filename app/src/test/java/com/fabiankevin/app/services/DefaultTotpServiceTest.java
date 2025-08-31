@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -141,7 +142,7 @@ class DefaultTotpServiceTest {
                 .updatedAt(Instant.now())
                 .build();
 
-        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
+        when(totpUserRepository.findById(any())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
 
         assertDoesNotThrow(() -> service.verify(VerifyTotpCommand.builder()
@@ -151,7 +152,7 @@ class DefaultTotpServiceTest {
                         .build()),
                 "Should not throw exception when TOTP code is valid");
 
-        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
+        verify(totpUserRepository).findById(any());
         verify(totpCodeVerifier).verify(secret, totpCode);
     }
 
@@ -162,13 +163,14 @@ class DefaultTotpServiceTest {
         String secret = "test-secret";
 
         TotpUser totpUser = TotpUser.builder()
+                .id(UUID.randomUUID())
                 .userReferenceId(userReferenceId)
                 .secret(secret)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
 
-        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
+        when(totpUserRepository.findById(totpUser.id())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(false);
 
         VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
@@ -181,7 +183,7 @@ class DefaultTotpServiceTest {
                 () -> service.verify(verifyCommand),
                 "Exception should be thrown when TOTP code is invalid");
 
-        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
+        verify(totpUserRepository).findById(totpUser.id());
         verify(totpCodeVerifier).verify(secret, totpCode);
     }
 
@@ -190,7 +192,7 @@ class DefaultTotpServiceTest {
         String userReferenceId = "test-user";
         String totpCode = "123456";
 
-        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.empty());
+        when(totpUserRepository.findById(any())).thenReturn(Optional.empty());
 
         VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
                 .id(null)
@@ -202,7 +204,7 @@ class DefaultTotpServiceTest {
                 () -> service.verify(verifyCommand),
                 "Exception should be thrown when the user is not found");
 
-        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
+        verify(totpUserRepository).findById(any());
         verifyNoInteractions(totpCodeVerifier);
     }
 }
