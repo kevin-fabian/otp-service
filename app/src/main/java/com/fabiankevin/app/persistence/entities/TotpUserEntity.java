@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "totp_users",  indexes = {
-        @Index(name = "totp_users_user_reference_id_uidx", columnList = "userReferenceId", unique = true)
+        @Index(name = "totp_users_user_reference_id_uidx", columnList = "userProfileId", unique = true)
 })
 @Data
 @Builder(toBuilder = true)

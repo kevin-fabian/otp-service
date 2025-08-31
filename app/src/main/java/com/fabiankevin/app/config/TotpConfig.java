@@ -1,10 +1,12 @@
 package com.fabiankevin.app.config;
 
+import com.fabiankevin.app.properties.TotpProperties;
 import dev.samstevens.totp.code.*;
 import dev.samstevens.totp.qr.QrGenerator;
 import dev.samstevens.totp.qr.ZxingPngQrGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.time.TimeProvider;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,4 +29,10 @@ public class TotpConfig {
         return new ZxingPngQrGenerator();
     }
 
+
+    @Bean
+    @ConfigurationProperties("totp")
+    public TotpProperties totpProperties() {
+        return new TotpProperties();
+    }
 }

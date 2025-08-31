@@ -3,6 +3,7 @@ package com.fabiankevin.app.web;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.services.TotpService;
 import com.fabiankevin.app.services.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.commands.VerifyTotpCommand;
 import com.fabiankevin.app.web.dtos.RegisterTotpRequest;
 import com.fabiankevin.app.web.dtos.TotpResponse;
 import com.fabiankevin.app.web.dtos.VerifyOtpRequest;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/totp")
@@ -39,10 +42,10 @@ public class TotpController {
             @Parameter(description = "TOTP registration request")
             @Valid @RequestBody RegisterTotpRequest request) {
         TotpUser totpUser = totpService.registerTotp(new RegisterTotpCommand(request.userReferenceId()));
-        return new TotpResponse(totpUser.userReferenceId());
+        return new TotpResponse(totpUser.id());
     }
 
-    @GetMapping(value = "/qr/{userReferenceId}", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/qr", produces = MediaType.IMAGE_PNG_VALUE)
     @Operation(summary = "Get QR Code",
             description = "Generates QR code image for TOTP setup.",
             responses = {
@@ -53,13 +56,13 @@ public class TotpController {
             })
     public ResponseEntity<byte[]> getQrCodeImage(
             @Parameter(description = "User reference ID")
-            @PathVariable String userReferenceId) {
+            @RequestParam("userReferenceId") String userReferenceId) {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
                 .body(totpService.getQrCodeImageByUserReferenceId(userReferenceId));
     }
 
-    @PostMapping("/verify")
+    @PostMapping("/{id}/verify")
     @Operation(summary = "Verify TOTP",
             description = "Verifies the provided TOTP code.",
             responses = {
@@ -69,8 +72,13 @@ public class TotpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verify(
+            @PathVariable UUID id,
             @Parameter(description = "TOTP verification request")
             @Valid @RequestBody VerifyOtpRequest request) {
-        totpService.verifyTotp(request.userReferenceId(), request.code());
+        totpService.verify(VerifyTotpCommand.builder()
+                        .id(id)
+                        .code(request.code())
+                        .purpose(request.purpose())
+                .build());
     }
 }

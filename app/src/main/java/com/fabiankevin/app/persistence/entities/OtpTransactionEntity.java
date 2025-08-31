@@ -5,11 +5,17 @@ import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Data
 @Entity
 @Table(name = "otp_transactions", indexes = {

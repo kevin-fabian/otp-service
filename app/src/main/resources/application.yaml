@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: 8079
 
 spring:
   application:
     name: otp-service
   profiles:
-    active: local-h2
+    active: local-postgres
   threads:
     virtual:
       enabled: true

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,6 +22,12 @@ public class DefaultTotpUserRepository implements TotpUserRepository {
     @Override
     public Optional<TotpUser> findByUserReferenceId(String userReferenceId) {
         return jpaTotpUserRepository.findByUserReferenceId(userReferenceId)
+                .map(TotpUserEntity::toModel);
+    }
+
+    @Override
+    public Optional<TotpUser> findById(UUID id) {
+        return jpaTotpUserRepository.findById(id)
                 .map(TotpUserEntity::toModel);
     }
 }

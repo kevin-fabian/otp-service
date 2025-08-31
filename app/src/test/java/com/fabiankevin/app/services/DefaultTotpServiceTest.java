@@ -4,9 +4,13 @@ import com.fabiankevin.app.exceptions.TotpAlreadyRegisteredException;
 import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
 import com.fabiankevin.app.exceptions.TotpUnregisteredException;
 import com.fabiankevin.app.models.TotpUser;
+import com.fabiankevin.app.models.enums.OtpPurpose;
+import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.persistence.TotpUserRepository;
+import com.fabiankevin.app.properties.TotpProperties;
 import com.fabiankevin.app.services.commands.GenerateQrCodeCommand;
 import com.fabiankevin.app.services.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.commands.VerifyTotpCommand;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -22,7 +26,10 @@ class DefaultTotpServiceTest {
     private final TotpUserRepository totpUserRepository = mock(TotpUserRepository.class);
     private final QrGenerator qrGenerator = mock(QrGenerator.class);
     private final TotpCodeVerifier totpCodeVerifier = mock(TotpCodeVerifier.class);
-    private final DefaultTotpService service = new DefaultTotpService(secretGenerator, totpUserRepository, qrGenerator, totpCodeVerifier);
+    private final TotpProperties properties = mock(TotpProperties.class);
+    private final OtpTransactionRepository otpTransactionRepository = mock(OtpTransactionRepository.class);
+    private final DefaultTotpService service = new DefaultTotpService(secretGenerator,
+            totpUserRepository, qrGenerator, totpCodeVerifier, properties, otpTransactionRepository);
 
     @Test
     void registerTotp_givenNewUser_thenShouldRegisterSuccessfully() {
@@ -68,6 +75,11 @@ class DefaultTotpServiceTest {
 
     @Test
     void getQrCodeImageByUserReferenceId_givenExistingUser_thenShouldReturnQrCodeImage() {
+        when(properties.getAlgorithm()).thenReturn("SHA1");
+        when(properties.getIssuer()).thenReturn("App Label");
+        when(properties.getDigits()).thenReturn(6);
+        when(properties.getPeriodSeconds()).thenReturn(30);
+
         String userReferenceId = "test-user";
         String secret = "test-secret";
         byte[] qrCodeImage = new byte[]{1, 2, 3};
@@ -117,7 +129,7 @@ class DefaultTotpServiceTest {
     }
 
     @Test
-    void verifyTotp_givenValidCode_thenShouldVerifySuccessfully() {
+    void verify_givenValidCode_thenShouldVerifySuccessfully() {
         String userReferenceId = "test-user";
         String totpCode = "123456";
         String secret = "test-secret";
@@ -132,7 +144,11 @@ class DefaultTotpServiceTest {
         when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
 
-        assertDoesNotThrow(() -> service.verifyTotp(userReferenceId, totpCode),
+        assertDoesNotThrow(() -> service.verify(VerifyTotpCommand.builder()
+                        .id(totpUser.id())
+                        .code(totpCode)
+                        .purpose(OtpPurpose.TRANSACTION)
+                        .build()),
                 "Should not throw exception when TOTP code is valid");
 
         verify(totpUserRepository).findByUserReferenceId(userReferenceId);
@@ -140,7 +156,7 @@ class DefaultTotpServiceTest {
     }
 
     @Test
-    void verifyTotp_givenInvalidCode_thenShouldThrowException() {
+    void verify_givenInvalidCode_thenShouldThrowException() {
         String userReferenceId = "test-user";
         String totpCode = "123456";
         String secret = "test-secret";
@@ -155,8 +171,14 @@ class DefaultTotpServiceTest {
         when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(false);
 
+        VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
+                .id(totpUser.id())
+                .code(totpCode)
+                .purpose(OtpPurpose.TRANSACTION)
+                .build();;
+
         assertThrows(TotpInvalidCodeException.class,
-                () -> service.verifyTotp(userReferenceId, totpCode),
+                () -> service.verify(verifyCommand),
                 "Exception should be thrown when TOTP code is invalid");
 
         verify(totpUserRepository).findByUserReferenceId(userReferenceId);
@@ -164,14 +186,20 @@ class DefaultTotpServiceTest {
     }
 
     @Test
-    void verifyTotp_givenNonExistentUser_thenShouldThrowException() {
+    void verify_givenNonExistentUser_thenShouldThrowException() {
         String userReferenceId = "test-user";
         String totpCode = "123456";
 
         when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.empty());
 
+        VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
+                .id(null)
+                .code(totpCode)
+                .purpose(OtpPurpose.TRANSACTION)
+                .build();;
+
         assertThrows(TotpUnregisteredException.class,
-                () -> service.verifyTotp(userReferenceId, totpCode),
+                () -> service.verify(verifyCommand),
                 "Exception should be thrown when the user is not found");
 
         verify(totpUserRepository).findByUserReferenceId(userReferenceId);
