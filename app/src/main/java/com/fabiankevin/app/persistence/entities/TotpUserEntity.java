@@ -26,7 +26,6 @@ public class TotpUserEntity {
     private String secret;
     @Column(name = "created_at")
     private Instant createdAt;
-
     @Column(name = "updated_at")
     private Instant updatedAt;
     

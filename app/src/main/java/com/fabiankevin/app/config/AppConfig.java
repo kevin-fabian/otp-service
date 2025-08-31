@@ -3,7 +3,7 @@ package com.fabiankevin.app.config;
 import com.fabiankevin.app.clients.EmailOtpClient;
 import com.fabiankevin.app.clients.LocalEmailOtpClient;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
-import com.fabiankevin.app.persistence.OtpRepository;
+import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.DefaultOtpGenerator;
 import com.fabiankevin.app.services.DefaultOtpService;
@@ -32,10 +32,10 @@ public class AppConfig {
 
     @Bean
     @Profile("!local-h2")
-    public OtpService defaultOtpService(OtpRepository otpRepository,
+    public OtpService defaultOtpService(OtpTransactionRepository otpTransactionRepository,
                                         EmailOtpClient emailOtpClient,
                                         OtpProperties otpProperties) {
-        return new DefaultOtpService(otpRepository,
+        return new DefaultOtpService(otpTransactionRepository,
                 Map.of(
                         DeliveryMethod.EMAIL, emailOtpClient
                 ),
@@ -46,10 +46,10 @@ public class AppConfig {
     @Bean
     @Profile("local-h2")
     @Primary
-    public OtpService localOtpService(OtpRepository otpRepository,
+    public OtpService localOtpService(OtpTransactionRepository otpTransactionRepository,
                                       LocalEmailOtpClient emailOtpClient,
                                       OtpProperties otpProperties) {
-        return new LocalOtpService(otpRepository,
+        return new LocalOtpService(otpTransactionRepository,
                 Map.of(
                         DeliveryMethod.EMAIL, emailOtpClient
                 ),

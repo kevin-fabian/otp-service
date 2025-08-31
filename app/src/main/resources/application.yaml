@@ -28,6 +28,12 @@ otp:
   max-attempts: 3
   code-length: 6
 
+totp:
+  algorithm: SHA1
+  digits: 6
+  period-seconds: 30
+  issuer: App Label
+
 logging:
   level:
     com.fabiankevin.app: INFO

@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.fabiankevin</groupId>
-    <artifactId>otp-service</artifactId>
+    <artifactId>otpTransaction-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>otp-service</name>
+    <name>otpTransaction-service</name>
     <description>This service will support various type of OTP such as SMS, email and push notification</description>
     <url/>
     <licenses>

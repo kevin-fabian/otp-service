@@ -2,10 +2,10 @@ package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.*;
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.OtpRepository;
+import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import com.fabiankevin.app.services.commands.VerifyOtpCommand;
@@ -21,19 +21,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class DefaultOtpService implements OtpService {
-    private final OtpRepository otpRepository;
+    private final OtpTransactionRepository otpTransactionRepository;
     private final Map<DeliveryMethod, OtpClient> otpClientMap;
     private final OtpGenerator otpGenerator;
     private final OtpProperties properties;
 
     @Override
     @Transactional
-    public Otp generate(GenerateOtpCommand command) {
-        return otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(command.recipient())
+    public OtpTransaction generate(GenerateOtpCommand command) {
+        return otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(command.recipient())
                 .orElseGet(() -> {
                     OffsetDateTime now = OffsetDateTime.now();
                     String otpCode = otpGenerator.generateCode(properties.getCodeLength());
-                    Otp otp = Otp.builder()
+                    OtpTransaction otpTransaction = OtpTransaction.builder()
                             .deliveryMethod(command.deliveryMethod())
                             .purpose(command.purpose())
                             .recipient(command.recipient())
@@ -46,20 +46,20 @@ public class DefaultOtpService implements OtpService {
                             .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                             .build();
 
-                    Otp savedOtp = otpRepository.saveAndFlush(otp);
+                    OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(otpTransaction);
 
-                    Optional.ofNullable(otpClientMap.get(otp.deliveryMethod()))
-                            .orElseThrow(() -> new UnsupportedDeliveryMethodException(otp.deliveryMethod()))
-                            .send(savedOtp);
+                    Optional.ofNullable(otpClientMap.get(otpTransaction.deliveryMethod()))
+                            .orElseThrow(() -> new UnsupportedDeliveryMethodException(otpTransaction.deliveryMethod()))
+                            .send(savedOtpTransaction);
 
-                    return savedOtp;
+                    return savedOtpTransaction;
                 });
     }
 
     @Override
     @Transactional(dontRollbackOn = {OtpVerificationException.class, OtpAttemptLimitExceededException.class, OtpExpiredException.class})
     public void verify(VerifyOtpCommand command) {
-        Otp savedOtp = otpRepository.retrieveById(command.id())
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.retrieveById(command.id())
                 .map(otp -> {
                     if (!otp.isActive()) {
                         throw new OtpInvalidStateException();
@@ -82,11 +82,11 @@ public class DefaultOtpService implements OtpService {
                         }
                     }
 
-                    return otpRepository.save(otpBuilder.attemptCount(attempts).build());
+                    return otpTransactionRepository.save(otpBuilder.attemptCount(attempts).build());
                 })
                 .orElseThrow(OtpNotFoundException::new);
 
-        switch (savedOtp.status()) {
+        switch (savedOtpTransaction.status()) {
             case ACTIVE -> throw new OtpVerificationException();
             case EXPIRED -> throw new OtpExpiredException();
             case INVALIDATED -> throw new OtpAttemptLimitExceededException();
@@ -95,17 +95,17 @@ public class DefaultOtpService implements OtpService {
     }
 
     @Override
-    public Otp retrieveById(UUID otpId) {
-        return otpRepository.retrieveById(otpId)
+    public OtpTransaction retrieveById(UUID otpId) {
+        return otpTransactionRepository.retrieveById(otpId)
                 .orElseThrow(OtpNotFoundException::new);
     }
 
     @Override
     public void markAsUsed(UUID otpId) {
-        otpRepository.retrieveById(otpId)
+        otpTransactionRepository.retrieveById(otpId)
                 .ifPresentOrElse(otp -> {
                             if (otp.status() == OtpStatus.VERIFIED) {
-                                otpRepository.save(otp.toBuilder()
+                                otpTransactionRepository.save(otp.toBuilder()
                                         .status(OtpStatus.USED)
                                         .updatedAt(OffsetDateTime.now())
                                         .build());

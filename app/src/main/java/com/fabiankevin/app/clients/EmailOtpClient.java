@@ -1,7 +1,7 @@
 package com.fabiankevin.app.clients;
 
 import com.fabiankevin.app.exceptions.EmailNotificationException;
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +22,14 @@ public class EmailOtpClient implements OtpClient {
     private final int expirationMinutes;
 
     @Override
-    public void send(Otp otp) {
-        String to = otp.recipient();
+    public void send(OtpTransaction otpTransaction) {
+        String to = otpTransaction.recipient();
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             Context context = new Context();
-            context.setVariable("otpCode", otp.otpCode());
+            context.setVariable("otpCode", otpTransaction.otpCode());
             context.setVariable("expirationMinutes", expirationMinutes);
             String htmlContent = templateEngine.process("otp-email-template", context);
 

@@ -14,7 +14,7 @@ import static com.fabiankevin.app.models.enums.OtpStatus.ACTIVE;
 
 @Builder(toBuilder = true)
 @With
-public record Otp(
+public record OtpTransaction(
         UUID id,
         String otpCode,
         String recipient,
@@ -27,7 +27,7 @@ public record Otp(
         int attemptCount,
         String metadata
 ) {
-    public Otp {
+    public OtpTransaction {
         Objects.requireNonNull(otpCode, "otpCode must not be null");
         Objects.requireNonNull(recipient, "recipient must not be null");
         Objects.requireNonNull(purpose, "purpose must not be null");

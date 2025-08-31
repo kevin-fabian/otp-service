@@ -3,7 +3,10 @@ package com.fabiankevin.app.services;
 import com.fabiankevin.app.exceptions.TotpAlreadyRegisteredException;
 import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
 import com.fabiankevin.app.exceptions.TotpUnregisteredException;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.TotpUser;
+import com.fabiankevin.app.models.enums.DeliveryMethod;
+import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.TotpUserRepository;
 import com.fabiankevin.app.services.commands.GenerateQrCodeCommand;
 import com.fabiankevin.app.services.commands.RegisterTotpCommand;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @RequiredArgsConstructor
 @Service
@@ -21,6 +25,7 @@ public class DefaultTotpService implements TotpService {
     private final TotpUserRepository totpUserRepository;
     private final QrGenerator qrGenerator;
     private final TotpCodeVerifier totpCodeVerifier;
+//    private final OtpTransactionRepository otpTransactionRepository;
 
     @Override
     @Transactional
@@ -50,7 +55,6 @@ public class DefaultTotpService implements TotpService {
         return qrGenerator.generate(GenerateQrCodeCommand.builder()
                 .algorithm("SHA1")
                 .label(totpUser.userReferenceId())
-                .algorithm("SHA1")
                 .secret(totpUser.secret())
                 .issuer("App Label")
                 .digits(6)
@@ -66,5 +70,18 @@ public class DefaultTotpService implements TotpService {
         if (!totpCodeVerifier.verify(totpUser.secret(), totpCode)) {
             throw new TotpInvalidCodeException();
         }
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        OtpTransaction.builder()
+                .recipient(totpUser.userReferenceId())
+                .otpCode(totpCode)
+                .purpose(null)
+                .status(OtpStatus.VERIFIED)
+                .deliveryMethod(DeliveryMethod.TOTP)
+                .attemptCount(1)
+                .updatedAt(now)
+                .createdAt(now);
+
     }
 }

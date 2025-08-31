@@ -40,7 +40,7 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 public class SMSOtpClient implements OtpClient {
 
     @Override
-    public void send(Otp otp) {
+    public void send(Otp otpTransaction) {
         // Your implementation here        
     }
 }
@@ -48,7 +48,7 @@ public class SMSOtpClient implements OtpClient {
 public class PushNotifcationOtpClient implements OtpClient {
 
     @Override
-    public void send(Otp otp) {
+    public void send(Otp otpTransaction) {
         // implementation        
     }
 }
@@ -58,10 +58,10 @@ The OtpClient implementation configuration
 @Configuration
 public class AppConfig {
     @Bean
-    public OtpService defaultOtpService(OtpRepository otpRepository,
+    public OtpService defaultOtpService(OtpRepository otpTransactionRepository,
                                         EmailOtpClient emailOtpClient,
                                         OtpProperties otpProperties) {
-        return new DefaultOtpService(otpRepository,
+        return new DefaultOtpService(otpTransactionRepository,
                 Map.of(
                         DeliveryMethod.EMAIL, emailOtpClient,
                         DeliveryMethod.SMS, new SMSOtpClient(),
@@ -88,15 +88,15 @@ API documentation is available via Swagger UI:
 
 ### OTP Management
 
-- `POST /v1/otp` - Generate new OTP
-- `POST /v1/otp/verify` - Validate OTP(Not yet implemented)
+- `POST /v1/otpTransaction` - Generate new OTP
+- `POST /v1/otpTransaction/verify` - Validate OTP(Not yet implemented)
 
 ## Configuration
 
 The following properties can be configured:
 
 ```yml
-otp:
+otpTransaction:
 #  OTP validity period in minutes
   expiration-minutes: 1
 #  OTP max attempts

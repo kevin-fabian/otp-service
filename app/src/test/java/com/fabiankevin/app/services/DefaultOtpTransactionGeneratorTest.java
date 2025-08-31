@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class DefaultOtpGeneratorTest {
+class DefaultOtpTransactionGeneratorTest {
 
     private final OtpGenerator generator = new DefaultOtpGenerator();
 

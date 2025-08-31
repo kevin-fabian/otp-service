@@ -1,10 +1,10 @@
 package com.fabiankevin.app.persistence;
 
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.entities.OtpEntity;
+import com.fabiankevin.app.persistence.entities.OtpTransactionEntity;
 import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,26 +19,26 @@ import java.util.Optional;
 import java.util.UUID;
 
 @DataJpaTest
-class DefaultOtpRepositoryTest {
+class DefaultOtpTransactionTransactionRepositoryTest {
     @Autowired
-    private OtpRepository otpRepository;
+    private OtpTransactionRepository otpTransactionRepository;
     @Autowired
     private JpaOtpRepository jpaOtpRepository;
 
-    private Otp mockedOtp;
+    private OtpTransaction mockedOtpTransaction;
 
     @TestConfiguration
     static class BeanConfiguration {
         @Bean
-        public OtpRepository defaultOtpRepository(JpaOtpRepository jpaOtpRepository){
-            return new DefaultOtpRepository(jpaOtpRepository);
+        public OtpTransactionRepository defaultOtpRepository(JpaOtpRepository jpaOtpRepository){
+            return new DefaultOtpTransactionRepository(jpaOtpRepository);
         }
     }
 
     @BeforeEach
     void setup(){
         OffsetDateTime now = OffsetDateTime.now();
-        mockedOtp = Otp.builder()
+        mockedOtpTransaction = OtpTransaction.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
                 .recipient("test@test.com")
@@ -53,85 +53,85 @@ class DefaultOtpRepositoryTest {
 
     @Test
     void saveAndFlush_givenValidOtp_thenShouldSave() {
-        Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        OtpEntity otpEntity = jpaOtpRepository.findById(savedOtp.id()).get();
+        OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findById(savedOtpTransaction.id()).get();
 
-        Assertions.assertThat(savedOtp)
+        Assertions.assertThat(savedOtpTransaction)
                 .usingRecursiveComparison()
-                .isEqualTo(otpEntity.toModel());
+                .isEqualTo(otpTransactionEntity.toModel());
     }
 
     @Test
     void saveAndFlush_givenNullOtp_thenShouldThrowException() {
-        Assertions.assertThatThrownBy(() -> otpRepository.saveAndFlush(null))
+        Assertions.assertThatThrownBy(() -> otpTransactionRepository.saveAndFlush(null))
                 .isInstanceOf(NullPointerException.class)
                 .describedAs("Expecting null pointer exception");
     }
 
     @Test
     void retrieveById_givenExistingId_thenShouldReturnOtp() {
-        Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveById(savedOtp.id());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveById(savedOtpTransaction.id());
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
                 .usingRecursiveComparison()
-                .isEqualTo(savedOtp);
+                .isEqualTo(savedOtpTransaction);
     }
 
     @Test
     void retrieveById_givenNonExistingId_thenShouldReturnEmpty() {
-        Optional<Otp> retrievedOtp = otpRepository.retrieveById(UUID.randomUUID());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveById(UUID.randomUUID());
 
         Assertions.assertThat(retrievedOtp).isNotPresent();
     }
 
     @Test
     void retrieveRecipientAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
-        Otp savedOtp = otpRepository.saveAndFlush(mockedOtp);
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtp.recipient());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
                 .usingRecursiveComparison()
-                .isEqualTo(savedOtp);
+                .isEqualTo(savedOtpTransaction);
     }
 
     @Test
     void retrieveRecipientAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
-        mockedOtp = mockedOtp.toBuilder()
+        mockedOtpTransaction = mockedOtpTransaction.toBuilder()
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
-        otpRepository.saveAndFlush(mockedOtp);
+        otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        Optional<Otp> retrievedOtp = otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtp.recipient());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
     void retrieveRecipient_thenShouldReturnEmpty() {
-        Optional<Otp> retrievedOtp = otpRepository.retrieveRecipientAndActiveStatusAndNotExpired("nonexistent@test.com");
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired("nonexistent@test.com");
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
     void save_givenValidOtp_thenShouldSaveAndReturnSavedEntity() {
-        Otp savedOtp = otpRepository.save(mockedOtp);
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.save(mockedOtpTransaction);
 
-        OtpEntity otpEntity = jpaOtpRepository.findById(savedOtp.id()).get();
-        Assertions.assertThat(otpEntity.toModel())
+        OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findById(savedOtpTransaction.id()).get();
+        Assertions.assertThat(otpTransactionEntity.toModel())
                 .usingRecursiveComparison()
-                .isEqualTo(savedOtp);
+                .isEqualTo(savedOtpTransaction);
     }
 
     @Test
     void save_givenNullOtp_thenShouldThrowException() {
-        Assertions.assertThatThrownBy(() -> otpRepository.save(null))
+        Assertions.assertThatThrownBy(() -> otpTransactionRepository.save(null))
                 .isInstanceOf(NullPointerException.class)
                 .describedAs("Expecting NullPointerException when saving null OTP");
     }

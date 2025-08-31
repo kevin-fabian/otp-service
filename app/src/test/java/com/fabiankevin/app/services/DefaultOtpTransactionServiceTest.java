@@ -2,11 +2,11 @@ package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.*;
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.OtpRepository;
+import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.properties.OtpProperties;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import com.fabiankevin.app.services.commands.VerifyOtpCommand;
@@ -23,15 +23,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-class DefaultOtpServiceTest {
-    private final OtpRepository otpRepository = mock(OtpRepository.class);
+class DefaultOtpTransactionServiceTest {
+    private final OtpTransactionRepository otpTransactionRepository = mock(OtpTransactionRepository.class);
     private final OtpClient smsOtpClient = mock(OtpClient.class);
     private final Map<DeliveryMethod, OtpClient> otpClientMap = spy(
             Map.of(DeliveryMethod.SMS, smsOtpClient)
     );
     private final OtpGenerator otpGenerator = mock(OtpGenerator.class);
     private final OtpProperties otpProperties = mock(OtpProperties.class);
-    private final OtpService otpService = new DefaultOtpService(otpRepository, otpClientMap, otpGenerator, otpProperties);
+    private final OtpService otpService = new DefaultOtpService(otpTransactionRepository, otpClientMap, otpGenerator, otpProperties);
 
     private GenerateOtpCommand mockedCommand;
 
@@ -53,45 +53,45 @@ class DefaultOtpServiceTest {
         when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
         otpService.generate(mockedCommand);
 
-        ArgumentCaptor<Otp> otpArgumentCaptor = ArgumentCaptor.forClass(Otp.class);
-        verify(otpRepository, times(1)).saveAndFlush(otpArgumentCaptor.capture());
-        Otp otpArgumentCaptorValue = otpArgumentCaptor.getValue();
+        ArgumentCaptor<OtpTransaction> otpArgumentCaptor = ArgumentCaptor.forClass(OtpTransaction.class);
+        verify(otpTransactionRepository, times(1)).saveAndFlush(otpArgumentCaptor.capture());
+        OtpTransaction otpTransactionArgumentCaptorValue = otpArgumentCaptor.getValue();
 
         // Assertions for the Otp object
-        assertEquals("123456", otpArgumentCaptorValue.otpCode(), "OTP code should match generated code");
-        assertEquals(mockedCommand.recipient(), otpArgumentCaptorValue.recipient(), "Recipient should match command");
-        assertEquals(mockedCommand.purpose(), otpArgumentCaptorValue.purpose(), "Purpose should match command");
-        assertEquals(OtpStatus.ACTIVE, otpArgumentCaptorValue.status(), "Status should match command");
-        assertEquals(mockedCommand.deliveryMethod(), otpArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
-        assertEquals(0, otpArgumentCaptorValue.attemptCount(), "Attempt count should be 0");
-        assertNotNull(otpArgumentCaptorValue.createdAt(), "Created at should not be null");
-        assertNotNull(otpArgumentCaptorValue.expiresAt(), "Expires at should not be null");
+        assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "OTP code should match generated code");
+        assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "Recipient should match command");
+        assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "Purpose should match command");
+        assertEquals(OtpStatus.ACTIVE, otpTransactionArgumentCaptorValue.status(), "Status should match command");
+        assertEquals(mockedCommand.deliveryMethod(), otpTransactionArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
+        assertEquals(0, otpTransactionArgumentCaptorValue.attemptCount(), "Attempt count should be 0");
+        assertNotNull(otpTransactionArgumentCaptorValue.createdAt(), "Created at should not be null");
+        assertNotNull(otpTransactionArgumentCaptorValue.expiresAt(), "Expires at should not be null");
         assertEquals(
-                otpArgumentCaptorValue.createdAt().plusMinutes(otpProperties.getExpirationMinutes()),
-                otpArgumentCaptorValue.expiresAt(),
+                otpTransactionArgumentCaptorValue.createdAt().plusMinutes(otpProperties.getExpirationMinutes()),
+                otpTransactionArgumentCaptorValue.expiresAt(),
                 "Expires at should be created at plus expiration minutes"
         );
-        assertNull(otpArgumentCaptorValue.id(), "ID should not be null");
-        assertEquals("{}", otpArgumentCaptorValue.metadata(), "Metadata should not be null");
+        assertNull(otpTransactionArgumentCaptorValue.id(), "ID should not be null");
+        assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
 
     @Test
     void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
-        Otp otp = generateOtp("test@test.com", "123456");
-        when(otpRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient()))
-                .thenReturn(Optional.of(otp));
-        Otp result = otpService.generate(mockedCommand);
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456");
+        when(otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient()))
+                .thenReturn(Optional.of(otpTransaction));
+        OtpTransaction result = otpService.generate(mockedCommand);
 
         // Assertions for the Otp object
         assertEquals("123456", result.otpCode(), "OTP code should match generated code");
-        assertEquals(otp.recipient(), result.recipient(), "Recipient should match command");
-        assertEquals(otp.purpose(), result.purpose(), "Purpose should match command");
+        assertEquals(otpTransaction.recipient(), result.recipient(), "Recipient should match command");
+        assertEquals(otpTransaction.purpose(), result.purpose(), "Purpose should match command");
         assertEquals(OtpStatus.ACTIVE, result.status(), "Status should match command");
-        assertEquals(otp.deliveryMethod(), result.deliveryMethod(), "Delivery method should match command");
+        assertEquals(otpTransaction.deliveryMethod(), result.deliveryMethod(), "Delivery method should match command");
         assertEquals(0, result.attemptCount(), "Attempt count should be 0");
         assertNotNull(result.createdAt(), "Created at should not be null");
         assertNotNull(result.expiresAt(), "Expires at should not be null");
@@ -100,10 +100,10 @@ class DefaultOtpServiceTest {
                 result.expiresAt(),
                 "Expires at should be created at plus expiration minutes"
         );
-        assertEquals(otp.id(), result.id(), "ID should match existing ID");
+        assertEquals(otpTransaction.id(), result.id(), "ID should match existing ID");
         assertEquals("test metadata", result.metadata(), "Metadata should not be null");
 
-        verify(otpRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
@@ -117,29 +117,29 @@ class DefaultOtpServiceTest {
                     .build());
         }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 
     @Test
     void verify_givenValidOtpCode_thenShouldSucceed() {
-        Otp otp = spy(generateOtp("test@test.com", "123456"));
-        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
-        when(otp.status()).thenReturn(OtpStatus.USED);
-        when(otpRepository.save(any(Otp.class))).thenReturn(otp);
+        OtpTransaction otpTransaction = spy(generateOtp("test@test.com", "123456"));
+        when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
+        when(otpTransaction.status()).thenReturn(OtpStatus.USED);
+        when(otpTransactionRepository.save(any(OtpTransaction.class))).thenReturn(otpTransaction);
 
         otpService.verify(VerifyOtpCommand.builder()
-                .id(otp.id())
+                .id(otpTransaction.id())
                 .otpCode("123456")
                 .build());
 
-        verify(otpRepository, times(1)).retrieveById(otp.id());
-        verify(otpRepository, times(1)).save(any());
+        verify(otpTransactionRepository, times(1)).retrieveById(otpTransaction.id());
+        verify(otpTransactionRepository, times(1)).save(any());
     }
 
     @Test
     void verify_givenNonExistingOtpCode_thenShouldThrowException() {
-        when(otpRepository.retrieveById(any(UUID.class))).thenReturn(Optional.empty());
+        when(otpTransactionRepository.retrieveById(any(UUID.class))).thenReturn(Optional.empty());
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(UUID.randomUUID())
@@ -150,17 +150,17 @@ class DefaultOtpServiceTest {
                 () -> otpService.verify(command),
                 "Should throw OtpNotFoundException when OTP ID is not found");
 
-        verify(otpRepository, never()).save(any());
+        verify(otpTransactionRepository, never()).save(any());
     }
 
     @Test
     void verify_givenIncorrectOtpCode_thenShouldIncrementAttempts() {
-        Otp otp = generateOtp("test@test.com", "654321");
-        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
-        when(otpRepository.save(any(Otp.class))).thenReturn(otp);
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "654321");
+        when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
+        when(otpTransactionRepository.save(any(OtpTransaction.class))).thenReturn(otpTransaction);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
-                .id(otp.id())
+                .id(otpTransaction.id())
                 .otpCode("123456")
                 .build();
 
@@ -168,22 +168,22 @@ class DefaultOtpServiceTest {
                 () -> otpService.verify(command),
                 "Should throw OtpVerificationException when OTP code is incorrect");
 
-        verify(otpRepository, times(1)).save(argThat(savedOtp ->
+        verify(otpTransactionRepository, times(1)).save(argThat(savedOtp ->
                 savedOtp.attemptCount() == 1 && savedOtp.updatedAt() != null));
     }
 
     @Test
     void verify_givenMaxAttemptsExceeded_thenShouldThrowException() {
-        Otp otp = spy(generateOtp("test@test.com", "654321").toBuilder()
+        OtpTransaction otpTransaction = spy(generateOtp("test@test.com", "654321").toBuilder()
                 .attemptCount(2)
                 .build());
-        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
         when(otpProperties.getMaxAttempts()).thenReturn(3);
-        when(otp.status()).thenReturn(OtpStatus.INVALIDATED);
-        when(otpRepository.save(any(Otp.class))).thenReturn(otp);
+        when(otpTransaction.status()).thenReturn(OtpStatus.INVALIDATED);
+        when(otpTransactionRepository.save(any(OtpTransaction.class))).thenReturn(otpTransaction);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
-                .id(otp.id())
+                .id(otpTransaction.id())
                 .otpCode("123456")
                 .build();
 
@@ -191,20 +191,20 @@ class DefaultOtpServiceTest {
                 () -> otpService.verify(command),
                 "Should throw OtpAttemptLimitExceededException when max attempts are reached");
 
-        verify(otpRepository, times(1))
+        verify(otpTransactionRepository, times(1))
                 .save(argThat(savedOtp -> savedOtp.attemptCount() == 3 && savedOtp.updatedAt() != null));
     }
 
     @Test
     void verify_givenOtpIsAlreadyVerified_thenShouldThrowException() {
-        Otp otp = spy(generateOtp("test@test.com", "123456").toBuilder()
+        OtpTransaction otpTransaction = spy(generateOtp("test@test.com", "123456").toBuilder()
                 .attemptCount(2)
                 .build());
-        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
-        when(otp.isActive()).thenReturn(false);
+        when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
+        when(otpTransaction.isActive()).thenReturn(false);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
-                .id(otp.id())
+                .id(otpTransaction.id())
                 .otpCode("123456")
                 .build();
 
@@ -212,20 +212,20 @@ class DefaultOtpServiceTest {
                 () -> otpService.verify(command),
                 "Should throw OtpInvalidStateException when OTP is already verified");
 
-        verify(otpRepository, times(1)).retrieveById(otp.id());
-        verify(otpRepository, never()).save(any(Otp.class));
+        verify(otpTransactionRepository, times(1)).retrieveById(otpTransaction.id());
+        verify(otpTransactionRepository, never()).save(any(OtpTransaction.class));
     }
 
     @Test
     void verify_givenExpiredOtp_thenShouldThrowException() {
-        Otp otp = generateOtp("test@test.com", "123456").toBuilder()
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456").toBuilder()
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
-        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
-        when(otpRepository.save(any(Otp.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
+        when(otpTransactionRepository.save(any(OtpTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
-                .id(otp.id())
+                .id(otpTransaction.id())
                 .otpCode("123456")
                 .build();
 
@@ -233,35 +233,35 @@ class DefaultOtpServiceTest {
                 () -> otpService.verify(command),
                 "Should throw OtpExpiredException when OTP has expired");
 
-        verify(otpRepository, times(1)).retrieveById(otp.id());
-        verify(otpRepository, times(1)).save(any(Otp.class));
+        verify(otpTransactionRepository, times(1)).retrieveById(otpTransaction.id());
+        verify(otpTransactionRepository, times(1)).save(any(OtpTransaction.class));
     }
 
     @Test
     void retrieveById_givenValidOtpId_thenShouldReturnOtp() {
-        Otp otp = generateOtp("test@test.com", "123456");
-        when(otpRepository.retrieveById(otp.id())).thenReturn(Optional.of(otp));
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456");
+        when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
 
-        Otp result = otpService.retrieveById(otp.id());
+        OtpTransaction result = otpService.retrieveById(otpTransaction.id());
 
-        assertEquals(otp, result, "Should return the correctly retrieved OTP");
-        verify(otpRepository, times(1)).retrieveById(otp.id());
+        assertEquals(otpTransaction, result, "Should return the correctly retrieved OTP");
+        verify(otpTransactionRepository, times(1)).retrieveById(otpTransaction.id());
     }
 
     @Test
     void retrieveById_givenNonExistingOtpId_thenShouldThrowException() {
         UUID randomId = UUID.randomUUID();
-        when(otpRepository.retrieveById(randomId)).thenReturn(Optional.empty());
+        when(otpTransactionRepository.retrieveById(randomId)).thenReturn(Optional.empty());
 
         assertThrows(OtpNotFoundException.class, () -> otpService.retrieveById(randomId),
                 "Should throw OtpNotFoundException when OTP does not exist");
 
-        verify(otpRepository, times(1)).retrieveById(randomId);
+        verify(otpTransactionRepository, times(1)).retrieveById(randomId);
     }
 
-    private static Otp generateOtp(String recipient, String otpCode) {
+    private static OtpTransaction generateOtp(String recipient, String otpCode) {
         OffsetDateTime now = OffsetDateTime.now();
-        return Otp.builder()
+        return OtpTransaction.builder()
                 .id(UUID.randomUUID())
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)

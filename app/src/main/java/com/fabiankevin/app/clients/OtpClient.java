@@ -1,7 +1,7 @@
 package com.fabiankevin.app.clients;
 
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 
 public interface OtpClient {
-    void send(Otp otp);
+    void send(OtpTransaction otpTransaction);
 }

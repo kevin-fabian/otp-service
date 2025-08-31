@@ -1,6 +1,6 @@
 package com.fabiankevin.app.persistence.entities;
 
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -16,7 +16,7 @@ import java.util.UUID;
         @Index(name = "otps_otp_code_idx", columnList = "otp_code"),
         @Index(name = "otps_recipient_idx", columnList = "recipient")
 })
-public class OtpEntity {
+public class OtpTransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
@@ -55,8 +55,8 @@ public class OtpEntity {
     @Column(name = "metadata")
     private String metadata;
 
-    public Otp toModel() {
-        return Otp.builder()
+    public OtpTransaction toModel() {
+        return OtpTransaction.builder()
                 .id(id)
                 .otpCode(otpCode)
                 .recipient(recipient)
@@ -71,19 +71,19 @@ public class OtpEntity {
                 .build();
     }
 
-    public static OtpEntity fromModel(Otp otp) {
-        OtpEntity entity = new OtpEntity();
-        entity.setId(otp.id());
-        entity.setOtpCode(otp.otpCode());
-        entity.setRecipient(otp.recipient());
-        entity.setPurpose(otp.purpose());
-        entity.setStatus(otp.status());
-        entity.setCreatedAt(otp.createdAt());
-        entity.setExpiresAt(otp.expiresAt());
-        entity.setUpdatedAt(otp.updatedAt());
-        entity.setDeliveryMethod(otp.deliveryMethod());
-        entity.setAttemptCount(otp.attemptCount());
-        entity.setMetadata(otp.metadata());
+    public static OtpTransactionEntity fromModel(OtpTransaction otpTransaction) {
+        OtpTransactionEntity entity = new OtpTransactionEntity();
+        entity.setId(otpTransaction.id());
+        entity.setOtpCode(otpTransaction.otpCode());
+        entity.setRecipient(otpTransaction.recipient());
+        entity.setPurpose(otpTransaction.purpose());
+        entity.setStatus(otpTransaction.status());
+        entity.setCreatedAt(otpTransaction.createdAt());
+        entity.setExpiresAt(otpTransaction.expiresAt());
+        entity.setUpdatedAt(otpTransaction.updatedAt());
+        entity.setDeliveryMethod(otpTransaction.deliveryMethod());
+        entity.setAttemptCount(otpTransaction.attemptCount());
+        entity.setMetadata(otpTransaction.metadata());
         return entity;
     }
 }

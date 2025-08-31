@@ -1,11 +1,11 @@
 package com.fabiankevin.app.web;
 
 import com.fabiankevin.app.clients.EmailOtpClient;
-import com.fabiankevin.app.models.Otp;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.OtpRepository;
+import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.services.OtpService;
 import com.fabiankevin.app.services.commands.GenerateOtpCommand;
 import com.fabiankevin.app.services.commands.VerifyOtpCommand;
@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class OtpControllerTest {
+class OtpTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -45,18 +45,18 @@ class OtpControllerTest {
 
     @MockitoSpyBean
     @Autowired
-    private OtpRepository otpRepository;
+    private OtpTransactionRepository otpTransactionRepository;
 
     @MockitoBean
     private EmailOtpClient emailOtpClient;
 
-    private Otp mockedOtp;
+    private OtpTransaction mockedOtpTransaction;
     private GenerateOtpCommand generateOtpCommand;
 
     @BeforeEach
     void setup() {
         OffsetDateTime now = OffsetDateTime.now();
-        mockedOtp = Otp.builder()
+        mockedOtpTransaction = OtpTransaction.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipient("test@test.com")
@@ -161,29 +161,29 @@ class OtpControllerTest {
 
     @Test
     void verifyOtp_givenValidRequest_thenShouldPassVerification() throws Exception {
-        Otp generatedOtp = otpService.generate(generateOtpCommand);
+        OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
 
-        mockMvc.perform(post("/v1/otp/{otp}/verify", generatedOtp.id())
+        mockMvc.perform(post("/v1/otp/{otp}/verify", generatedOtpTransaction.id())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                    "otp_code": "{{otp_code}}"
                                 }
-                                """.replace("{{otp_code}}", generatedOtp.otpCode())))
+                                """.replace("{{otp_code}}", generatedOtpTransaction.otpCode())))
                 .andExpect(status().isNoContent());
 
         verify(otpService, times(1)).verify(any());
 
-        Otp otp = otpRepository.retrieveById(generatedOtp.id()).get();
-        assertEquals(OtpStatus.VERIFIED, otp.status(), "Otp status should be VERIFIED");
+        OtpTransaction otpTransaction = otpTransactionRepository.retrieveById(generatedOtpTransaction.id()).get();
+        assertEquals(OtpStatus.VERIFIED, otpTransaction.status(), "Otp status should be VERIFIED");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "1", "123456"})
     void verifyOtp_givenInvalidOtpCode_thenShouldReturnBadRequest(String invalidOtpCode) throws Exception {
-        Otp generatedOtp = otpService.generate(generateOtpCommand);
+        OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
 
-        mockMvc.perform(post("/v1/otp/{id}/verify", generatedOtp.id())
+        mockMvc.perform(post("/v1/otp/{id}/verify", generatedOtpTransaction.id())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -211,21 +211,21 @@ class OtpControllerTest {
 
     @Test
     void retrieveById_givenValidId_thenShouldReturnOtpDetails() throws Exception {
-        Otp savedOtp = otpRepository.save(mockedOtp);
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.save(mockedOtpTransaction);
 
-        mockMvc.perform(get("/v1/otp/{id}", savedOtp.id())
+        mockMvc.perform(get("/v1/otp/{id}", savedOtpTransaction.id())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(savedOtp.id().toString()))
-                .andExpect(jsonPath("$.recipient").value(mockedOtp.recipient()))
-                .andExpect(jsonPath("$.purpose").value(mockedOtp.purpose().name()))
-                .andExpect(jsonPath("$.delivery_method").value(mockedOtp.deliveryMethod().name()))
-                .andExpect(jsonPath("$.status").value(mockedOtp.status().name()))
+                .andExpect(jsonPath("$.id").value(savedOtpTransaction.id().toString()))
+                .andExpect(jsonPath("$.recipient").value(mockedOtpTransaction.recipient()))
+                .andExpect(jsonPath("$.purpose").value(mockedOtpTransaction.purpose().name()))
+                .andExpect(jsonPath("$.delivery_method").value(mockedOtpTransaction.deliveryMethod().name()))
+                .andExpect(jsonPath("$.status").value(mockedOtpTransaction.status().name()))
                 .andExpect(jsonPath("$.updated_at").exists())
                 .andExpect(jsonPath("$.created_at").exists())
                 .andExpect(jsonPath("$.expired_at").exists());
 
-        verify(otpService, times(1)).retrieveById(savedOtp.id());
+        verify(otpService, times(1)).retrieveById(savedOtpTransaction.id());
     }
 
     @Test
@@ -243,34 +243,34 @@ class OtpControllerTest {
 
     @Test
     void markOtpAsUsed_givenVerifiedOtp_thenShouldUpdateStatusToUsedAndReturnNoContent() throws Exception {
-        Otp generatedOtp = otpService.generate(generateOtpCommand);
-        otpService.verify(new VerifyOtpCommand(generatedOtp.id(), generatedOtp.otpCode()));
+        OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
+        otpService.verify(new VerifyOtpCommand(generatedOtpTransaction.id(), generatedOtpTransaction.otpCode()));
 
-        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtp.id())
+        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtpTransaction.id())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(otpService, times(1)).markAsUsed(generatedOtp.id());
+        verify(otpService, times(1)).markAsUsed(generatedOtpTransaction.id());
 
-        Otp otp = otpRepository.retrieveById(generatedOtp.id()).get();
-        assertEquals(OtpStatus.USED, otp.status(), "Otp status should be USED");
+        OtpTransaction otpTransaction = otpTransactionRepository.retrieveById(generatedOtpTransaction.id()).get();
+        assertEquals(OtpStatus.USED, otpTransaction.status(), "Otp status should be USED");
     }
 
     @Test
     void markOtpAsUsed_givenOtpIsNotVerified_thenShouldBeBadRequest() throws Exception {
-        Otp generatedOtp = otpService.generate(generateOtpCommand);
+        OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
 
-        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtp.id())
+        mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtpTransaction.id())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(otpService, times(1)).markAsUsed(generatedOtp.id());
+        verify(otpService, times(1)).markAsUsed(generatedOtpTransaction.id());
     }
 
     @Test
     void markOtpAsUsed_givenInvalidId_thenShouldReturnNotFound() throws Exception {
-        Otp generatedOtp = otpService.generate(generateOtpCommand);
-        otpService.verify(new VerifyOtpCommand(generatedOtp.id(), generatedOtp.otpCode()));
+        OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
+        otpService.verify(new VerifyOtpCommand(generatedOtpTransaction.id(), generatedOtpTransaction.otpCode()));
 
         UUID invalidId = UUID.randomUUID();
 
