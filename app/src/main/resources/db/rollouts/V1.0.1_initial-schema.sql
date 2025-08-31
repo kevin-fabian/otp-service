@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS otps (
+CREATE TABLE IF NOT EXISTS otp_transactions (
     id UUID PRIMARY KEY,
     otp_code VARCHAR NOT NULL,
     recipient VARCHAR NOT NULL,
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS otps (
     metadata TEXT
 );
 
-CREATE INDEX IF NOT EXISTS otps_otp_code_idx ON otps (otp_code);
-CREATE INDEX IF NOT EXISTS otps_recipient_idx ON otps (recipient);
+CREATE INDEX IF NOT EXISTS otp_transactions_otp_code_idx ON otp_transactions (otp_code);
+CREATE INDEX IF NOT EXISTS otp_transactions_recipient_idx ON otp_transactions (recipient);

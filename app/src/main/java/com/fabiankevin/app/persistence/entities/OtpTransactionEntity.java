@@ -11,10 +11,10 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
-@Entity(name = "otps")
-@Table(name = "otps", indexes = {
-        @Index(name = "otps_otp_code_idx", columnList = "otp_code"),
-        @Index(name = "otps_recipient_idx", columnList = "recipient")
+@Entity
+@Table(name = "otp_transactions", indexes = {
+        @Index(name = "otp_transactions_otp_code_idx", columnList = "otp_code"),
+        @Index(name = "otp_transactions_recipient_idx", columnList = "recipient")
 })
 public class OtpTransactionEntity {
     @Id

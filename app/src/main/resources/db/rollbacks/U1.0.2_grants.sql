@@ -1,3 +1,3 @@
 REVOKE ALL ON
-    otps
+    otp_transactions
     FROM "otp_apps";

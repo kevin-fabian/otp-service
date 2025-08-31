@@ -1,3 +1,3 @@
 GRANT INSERT, SELECT, UPDATE, DELETE ON
-    otps
+    totp_users
     TO "otp_apps";

@@ -116,7 +116,7 @@
             <properties>
                 <db.url>jdbc:postgresql://localhost:5432/otp_db</db.url>
                 <db.username>otp_user</db.username>
-                <db.password>otp__user</db.password>
+                <db.password>otp_user</db.password>
                 <db.schema>otp_user</db.schema>
                 <db.driver>org.postgresql.Driver</db.driver>
             </properties>
