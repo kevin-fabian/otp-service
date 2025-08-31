@@ -16,6 +16,11 @@ spring:
       mail.smtp:
           auth: true
           starttls.enable: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jws-algorithms: RS256
 
 management:
   endpoints:
@@ -24,7 +29,7 @@ management:
         include: prometheus
 
 otp:
-  expiration-minutes: 1
+  expiration-minutes: 5
   max-attempts: 3
   code-length: 6
 

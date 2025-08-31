@@ -15,7 +15,20 @@ spring:
   mail:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+          audiences: downstream-client
 logging:
   level:
     org.zalando.logbook: TRACE
+    com.github.fabiankevin: DEBUG
+    com.fabiankevin: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.boot: DEBUG
+
+otel:
+  sdk:
+    disabled: true

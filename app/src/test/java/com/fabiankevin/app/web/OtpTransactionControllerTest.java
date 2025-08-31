@@ -16,18 +16,24 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,8 +56,12 @@ class OtpTransactionControllerTest {
     @MockitoBean
     private EmailOtpClient emailOtpClient;
 
+    @MockBean
+    private JwtDecoder jwtDecoder;
+
     private OtpTransaction mockedOtpTransaction;
     private GenerateOtpCommand generateOtpCommand;
+    private Jwt mockJwt;
 
     @BeforeEach
     void setup() {
@@ -74,11 +84,24 @@ class OtpTransactionControllerTest {
                 .recipient("john.doe@test.com")
                 .metadata("some metadata")
                 .build();
+
+        mockJwt = Jwt.withTokenValue("token")
+                .header("alg", "RS256")
+                .header("kid", UUID.randomUUID().toString())
+                .claim("sub", "test-user")
+                .claim("scope", "otp:manage")
+                .claim("roles", Collections.singletonList("USER"))
+                .expiresAt(Instant.now().plusSeconds(300))
+                .issuedAt(Instant.now())
+                .build();
+
+        when(jwtDecoder.decode(anyString())).thenReturn(mockJwt);
     }
 
     @Test
     void generateOtp_givenValidRequest_thenShouldReturnOtpCode() throws Exception {
         mockMvc.perform(post("/v1/otp")
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -103,10 +126,10 @@ class OtpTransactionControllerTest {
         verify(otpService, times(1)).generate(any());
     }
 
-
     @Test
     void generateOtp_givenInvalidPurpose_thenShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/v1/otp")
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -126,6 +149,7 @@ class OtpTransactionControllerTest {
     @Test
     void generateOtp_givenInvalidDeliveryMethod_thenShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/v1/otp")
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -145,6 +169,7 @@ class OtpTransactionControllerTest {
     @Test
     void generateOtp_givenInvalidRecipient_thenShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/v1/otp")
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -164,6 +189,7 @@ class OtpTransactionControllerTest {
         OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
 
         mockMvc.perform(post("/v1/otp/{otp}/verify", generatedOtpTransaction.id())
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -184,6 +210,7 @@ class OtpTransactionControllerTest {
         OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
 
         mockMvc.perform(post("/v1/otp/{id}/verify", generatedOtpTransaction.id())
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -198,6 +225,7 @@ class OtpTransactionControllerTest {
         otpService.generate(generateOtpCommand);
 
         mockMvc.perform(post("/v1/otp/{id}/verify", UUID.randomUUID())
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -214,6 +242,7 @@ class OtpTransactionControllerTest {
         OtpTransaction savedOtpTransaction = otpTransactionRepository.save(mockedOtpTransaction);
 
         mockMvc.perform(get("/v1/otp/{id}", savedOtpTransaction.id())
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(savedOtpTransaction.id().toString()))
@@ -233,6 +262,7 @@ class OtpTransactionControllerTest {
         UUID invalidId = UUID.randomUUID();
 
         mockMvc.perform(get("/v1/otp/{id}", invalidId)
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Resource Error"))
@@ -247,6 +277,7 @@ class OtpTransactionControllerTest {
         otpService.verify(new VerifyOtpCommand(generatedOtpTransaction.id(), generatedOtpTransaction.otpCode()));
 
         mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtpTransaction.id())
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
@@ -261,6 +292,7 @@ class OtpTransactionControllerTest {
         OtpTransaction generatedOtpTransaction = otpService.generate(generateOtpCommand);
 
         mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", generatedOtpTransaction.id())
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
@@ -275,6 +307,7 @@ class OtpTransactionControllerTest {
         UUID invalidId = UUID.randomUUID();
 
         mockMvc.perform(patch("/v1/otp/{id}/mark-as-used", invalidId)
+                        .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Resource Error"))
