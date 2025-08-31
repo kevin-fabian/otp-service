@@ -1,9 +1,9 @@
 package com.fabiankevin.app.web;
 
 import com.fabiankevin.app.models.TotpUser;
-import com.fabiankevin.app.services.TotpService;
-import com.fabiankevin.app.services.commands.RegisterTotpCommand;
-import com.fabiankevin.app.services.commands.VerifyTotpCommand;
+import com.fabiankevin.app.services.totp.TotpService;
+import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.totp.commands.VerifyTotpCommand;
 import com.fabiankevin.app.web.dtos.RegisterTotpRequest;
 import com.fabiankevin.app.web.dtos.TotpResponse;
 import com.fabiankevin.app.web.dtos.VerifyOtpRequest;

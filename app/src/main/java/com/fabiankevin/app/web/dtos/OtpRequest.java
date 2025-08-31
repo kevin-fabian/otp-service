@@ -2,7 +2,7 @@ package com.fabiankevin.app.web.dtos;
 
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
-import com.fabiankevin.app.services.commands.GenerateOtpCommand;
+import com.fabiankevin.app.services.otp.commands.GenerateOtpCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

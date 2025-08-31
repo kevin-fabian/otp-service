@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.totp;
 
 import org.apache.commons.codec.binary.Base32;
 import org.springframework.stereotype.Component;

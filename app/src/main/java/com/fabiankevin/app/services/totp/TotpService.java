@@ -1,8 +1,8 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.totp;
 
 import com.fabiankevin.app.models.TotpUser;
-import com.fabiankevin.app.services.commands.RegisterTotpCommand;
-import com.fabiankevin.app.services.commands.VerifyTotpCommand;
+import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.totp.commands.VerifyTotpCommand;
 
 public interface TotpService {
     TotpUser registerTotp(RegisterTotpCommand command);

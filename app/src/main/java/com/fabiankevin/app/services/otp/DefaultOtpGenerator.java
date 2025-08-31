@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.otp;
 
 import org.springframework.stereotype.Component;
 

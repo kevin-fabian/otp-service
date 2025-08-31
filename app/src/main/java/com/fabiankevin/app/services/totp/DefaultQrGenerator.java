@@ -1,7 +1,7 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.totp;
 
 import com.fabiankevin.app.exceptions.QrGeneratorException;
-import com.fabiankevin.app.services.commands.GenerateQrCodeCommand;
+import com.fabiankevin.app.services.totp.commands.GenerateQrCodeCommand;
 import dev.samstevens.totp.code.HashingAlgorithm;
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import dev.samstevens.totp.qr.QrData;

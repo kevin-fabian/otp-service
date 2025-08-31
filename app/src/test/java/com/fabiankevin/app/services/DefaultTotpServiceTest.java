@@ -8,9 +8,13 @@ import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.persistence.TotpUserRepository;
 import com.fabiankevin.app.properties.TotpProperties;
-import com.fabiankevin.app.services.commands.GenerateQrCodeCommand;
-import com.fabiankevin.app.services.commands.RegisterTotpCommand;
-import com.fabiankevin.app.services.commands.VerifyTotpCommand;
+import com.fabiankevin.app.services.totp.DefaultTotpService;
+import com.fabiankevin.app.services.totp.QrGenerator;
+import com.fabiankevin.app.services.totp.SecretGenerator;
+import com.fabiankevin.app.services.totp.TotpCodeVerifier;
+import com.fabiankevin.app.services.totp.commands.GenerateQrCodeCommand;
+import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.totp.commands.VerifyTotpCommand;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

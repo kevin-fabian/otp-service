@@ -1,5 +1,7 @@
 package com.fabiankevin.app.services;
 
+import com.fabiankevin.app.services.totp.SecretGenerator;
+import com.fabiankevin.app.services.totp.TotpSecretGenerator;
 import org.apache.commons.codec.binary.Base32;
 import org.junit.jupiter.api.Test;
 

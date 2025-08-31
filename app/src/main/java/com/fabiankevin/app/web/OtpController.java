@@ -1,7 +1,7 @@
 package com.fabiankevin.app.web;
 
-import com.fabiankevin.app.services.OtpService;
-import com.fabiankevin.app.services.commands.VerifyOtpCommand;
+import com.fabiankevin.app.services.otp.OtpService;
+import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 import com.fabiankevin.app.web.dtos.OtpRequest;
 import com.fabiankevin.app.web.dtos.OtpResponse;
 import com.fabiankevin.app.web.dtos.OtpVerificationRequest;

@@ -1,11 +1,11 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.otp;
 
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.properties.OtpProperties;
-import com.fabiankevin.app.services.commands.VerifyOtpCommand;
+import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services.commands;
+package com.fabiankevin.app.services.otp.commands;
 
 import lombok.Builder;
 

@@ -1,5 +1,7 @@
 package com.fabiankevin.app.services;
 
+import com.fabiankevin.app.services.totp.DefaultTotpCodeVerifier;
+import com.fabiankevin.app.services.totp.TotpCodeVerifier;
 import dev.samstevens.totp.code.CodeVerifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

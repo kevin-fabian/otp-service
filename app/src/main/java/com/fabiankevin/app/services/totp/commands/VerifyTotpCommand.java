@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services.commands;
+package com.fabiankevin.app.services.totp.commands;
 
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.otp;
 
 import com.fabiankevin.app.clients.OtpClient;
 import com.fabiankevin.app.exceptions.*;
@@ -7,8 +7,8 @@ import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.properties.OtpProperties;
-import com.fabiankevin.app.services.commands.GenerateOtpCommand;
-import com.fabiankevin.app.services.commands.VerifyOtpCommand;
+import com.fabiankevin.app.services.otp.commands.GenerateOtpCommand;
+import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.totp;
 
 import com.fabiankevin.app.exceptions.TotpAlreadyRegisteredException;
 import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
@@ -10,9 +10,9 @@ import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.persistence.TotpUserRepository;
 import com.fabiankevin.app.properties.TotpProperties;
-import com.fabiankevin.app.services.commands.GenerateQrCodeCommand;
-import com.fabiankevin.app.services.commands.RegisterTotpCommand;
-import com.fabiankevin.app.services.commands.VerifyTotpCommand;
+import com.fabiankevin.app.services.totp.commands.GenerateQrCodeCommand;
+import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.totp.commands.VerifyTotpCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.totp;
 
 public interface SecretGenerator {
     String generate();

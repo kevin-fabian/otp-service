@@ -1,8 +1,8 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.otp;
 
 import com.fabiankevin.app.models.OtpTransaction;
-import com.fabiankevin.app.services.commands.GenerateOtpCommand;
-import com.fabiankevin.app.services.commands.VerifyOtpCommand;
+import com.fabiankevin.app.services.otp.commands.GenerateOtpCommand;
+import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 
 import java.util.UUID;
 

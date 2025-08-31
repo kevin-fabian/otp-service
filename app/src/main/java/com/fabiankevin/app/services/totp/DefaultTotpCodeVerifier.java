@@ -1,4 +1,4 @@
-package com.fabiankevin.app.services;
+package com.fabiankevin.app.services.totp;
 
 import dev.samstevens.totp.code.CodeVerifier;
 import lombok.RequiredArgsConstructor;
