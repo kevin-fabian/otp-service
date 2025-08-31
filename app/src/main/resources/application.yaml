@@ -9,18 +9,13 @@ spring:
   threads:
     virtual:
       enabled: true
-  jackson:
-    property-naming-strategy: SNAKE_CASE
   mail:
     host: smtp.gmail.com
     port: 587
     properties:
-      mail:
-        smtp:
+      mail.smtp:
           auth: true
-          starttls:
-            enable: true
-            required: true
+          starttls.enable: true
 
 management:
   endpoints:
@@ -39,7 +34,7 @@ logging:
 
 logbook:
   format:
-    style: http
+    style: json
   obfuscate:
     headers:
       - Authorization
@@ -49,3 +44,8 @@ logbook:
       - token
   filter:
     enabled: true
+    include:
+      - uri: /v1/**
+    exclude:
+      - uri: /actuator/**
+      - status: 404

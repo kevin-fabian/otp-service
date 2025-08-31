@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./app/data/otp-db
+    url: jdbc:h2:file:./data/otp-db
     username: otpuser
     password: otpuser
     driverClassName: org.h2.Driver

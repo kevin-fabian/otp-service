@@ -105,11 +105,7 @@ otp:
   code-length: 6
 ```
 
-## Jasypt
-```bash
-#Run the encryption command:
-mvn jasypt:encrypt -Djasypt.encryptor.password="" -Djasypt.plugin.path="file:src/main/resources/application-local.yaml" -Djasypt.encryptor.algorithm="PBEWithHmacSHA256AndAES_256"
 
-#To decrypt a file with encrypted properties:
-mvn jasypt:decrypt -Djasypt.encryptor.password="" -Djasypt.plugin.path="file:src/main/resources/application-local.yaml" -Djasypt.encryptor.algorithm="PBEWithHmacSHA256AndAES_256"
-```
+
+export MAIL_USERNAME=kevdev1119@gmail.com
+export MAIL_PASSWORD=e3jhqfsr1611

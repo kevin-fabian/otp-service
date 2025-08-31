@@ -9,16 +9,20 @@ import com.fabiankevin.app.services.DefaultOtpGenerator;
 import com.fabiankevin.app.services.DefaultOtpService;
 import com.fabiankevin.app.services.LocalOtpService;
 import com.fabiankevin.app.services.OtpService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 
 import java.util.Map;
 
 @Configuration
 public class AppConfig {
+    @Autowired
+    private Environment environment;
 
     @ConfigurationProperties("otp")
     @Bean
@@ -26,7 +30,8 @@ public class AppConfig {
         return new OtpProperties();
     }
 
-    @Bean("!local-h2")
+    @Bean
+    @Profile("!local-h2")
     public OtpService defaultOtpService(OtpRepository otpRepository,
                                         EmailOtpClient emailOtpClient,
                                         OtpProperties otpProperties) {

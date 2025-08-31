@@ -50,7 +50,7 @@
     <div class="content">
         <p>Please use the following code to verify your account:</p>
         <div class="otp-code" th:text="${otpCode}"></div>
-        <p>This code will expire in ${expirationMinutes} minutes.</p>
+        <p th:text="'This code will expire in ' + ${expirationMinutes} + ' minutes.'"></p>
     </div>
     <div class="footer">
         <p>This is a secure OTP. Do not share this code with anyone.</p>
