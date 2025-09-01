@@ -94,7 +94,7 @@ class DefaultOtpTransactionTransactionRepositoryTest {
     void retrieveRecipientAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
         OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
@@ -109,14 +109,14 @@ class DefaultOtpTransactionTransactionRepositoryTest {
                 .build();
         otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
     void retrieveRecipient_thenShouldReturnEmpty() {
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired("nonexistent@test.com");
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired("nonexistent@test.com");
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }

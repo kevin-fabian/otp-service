@@ -1,8 +1,6 @@
 package com.fabiankevin.app.services.totp;
 
-import com.fabiankevin.app.exceptions.TotpAlreadyRegisteredException;
-import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
-import com.fabiankevin.app.exceptions.TotpUnregisteredException;
+import com.fabiankevin.app.exceptions.*;
 import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
@@ -20,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -31,6 +30,8 @@ public class DefaultTotpService implements TotpService {
     private final TotpCodeVerifier totpCodeVerifier;
     private final TotpProperties properties;
     private final OtpTransactionRepository otpTransactionRepository;
+
+    private static final int DEFAULT_TOTP_MAX_ATTEMPTS = 3;
 
     @Override
     @Transactional
@@ -91,7 +92,9 @@ public class DefaultTotpService implements TotpService {
 
         OffsetDateTime now = OffsetDateTime.now();
 
-        OtpTransaction otpTransaction = otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(totpUser.userReferenceId())
+        OtpTransaction otpTransaction = otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(
+                        totpUser.userReferenceId(),
+                        List.of(OtpStatus.ACTIVE, OtpStatus.VERIFIED))
                 .orElse(OtpTransaction.builder()
                         .recipient(totpUser.userReferenceId())
                         .otpCode(code)
@@ -100,9 +103,17 @@ public class DefaultTotpService implements TotpService {
                         .deliveryMethod(DeliveryMethod.TOTP)
                         .createdAt(now)
                         .updatedAt(now)
-                        .expiresAt(now.plusSeconds(300))
+                        .expiresAt(now.plusSeconds(60))
                         .attemptCount(0)
                         .build());
+
+        if(OtpStatus.VERIFIED.equals(otpTransaction.status())){
+            throw new OtpInvalidStateException();
+        }
+
+        if (otpTransaction.attemptCount() >= DEFAULT_TOTP_MAX_ATTEMPTS) {
+            throw new OtpAttemptLimitExceededException();
+        }
 
         if (!totpCodeVerifier.verify(totpUser.secret(), code)) {
             otpTransactionRepository.save(otpTransaction.toBuilder()

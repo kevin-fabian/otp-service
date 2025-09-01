@@ -146,7 +146,7 @@ class DefaultTotpServiceTest {
                 .updatedAt(Instant.now())
                 .build();
 
-        when(totpUserRepository.findById(any())).thenReturn(Optional.of(totpUser));
+        when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
 
         assertDoesNotThrow(() -> service.verify(VerifyTotpCommand.builder()
@@ -156,7 +156,7 @@ class DefaultTotpServiceTest {
                         .build()),
                 "Should not throw exception when TOTP code is valid");
 
-        verify(totpUserRepository).findById(any());
+        verify(totpUserRepository).findByUserReferenceId(any());
         verify(totpCodeVerifier).verify(secret, totpCode);
     }
 
@@ -174,7 +174,7 @@ class DefaultTotpServiceTest {
                 .updatedAt(Instant.now())
                 .build();
 
-        when(totpUserRepository.findById(totpUser.id())).thenReturn(Optional.of(totpUser));
+        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(false);
 
         VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
@@ -187,7 +187,7 @@ class DefaultTotpServiceTest {
                 () -> service.verify(verifyCommand),
                 "Exception should be thrown when TOTP code is invalid");
 
-        verify(totpUserRepository).findById(totpUser.id());
+        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
         verify(totpCodeVerifier).verify(secret, totpCode);
     }
 
@@ -196,7 +196,7 @@ class DefaultTotpServiceTest {
         String userReferenceId = "test-user";
         String totpCode = "123456";
 
-        when(totpUserRepository.findById(any())).thenReturn(Optional.empty());
+        when(totpUserRepository.findByUserReferenceId(userReferenceId)).thenReturn(Optional.empty());
 
         VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
                 .userReferenceId(userReferenceId)
@@ -208,7 +208,7 @@ class DefaultTotpServiceTest {
                 () -> service.verify(verifyCommand),
                 "Exception should be thrown when the user is not found");
 
-        verify(totpUserRepository).findById(any());
+        verify(totpUserRepository).findByUserReferenceId(userReferenceId);
         verifyNoInteractions(totpCodeVerifier);
     }
 }

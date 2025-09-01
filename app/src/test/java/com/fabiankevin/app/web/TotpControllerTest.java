@@ -24,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -123,6 +124,49 @@ class TotpControllerTest {
         verify(totpService, times(1)).verify(any());
 
         OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findAll().getFirst();
+        assertEquals(OtpStatus.VERIFIED, otpTransactionEntity.getStatus(), "Otp status should be VERIFIED");
+        assertEquals(0, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
+        assertEquals("123456", otpTransactionEntity.getOtpCode(), "otp code should match");
+        assertEquals(USER_PROFILE_ID.toString(), otpTransactionEntity.getRecipient(), "user profile userReferenceId should match");
+        assertEquals(DeliveryMethod.TOTP, otpTransactionEntity.getDeliveryMethod(), "user profile userReferenceId should match");
+        assertEquals(OtpPurpose.LOGIN, otpTransactionEntity.getPurpose(), "purpose should be LOGIN");
+    }
+
+    @Test
+    void verify_givenMultipleValidRequests_thenShouldOnlySucceedOnce() throws Exception {
+        totpService.registerTotp(RegisterTotpCommand.builder()
+                .userProfileId(USER_PROFILE_ID.toString())
+                .build());
+
+        when(totpCodeVerifier.verify(any(), eq("123456"))).thenReturn(true);
+
+        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
+                        .with(jwt().jwt(mockJwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "code": "123456",
+                                    "purpose": "LOGIN"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
+                        .with(jwt().jwt(mockJwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "code": "123456",
+                                    "purpose": "LOGIN"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verify(totpService, times(2)).verify(any());
+        List<OtpTransactionEntity> all = jpaOtpRepository.findAll();
+        assertEquals(1, all.size(), "Should only have one OTP transaction");
+
+        OtpTransactionEntity otpTransactionEntity = all.getFirst();
         assertEquals(OtpStatus.VERIFIED, otpTransactionEntity.getStatus(), "Otp status should be VERIFIED");
         assertEquals(0, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
         assertEquals("123456", otpTransactionEntity.getOtpCode(), "otp code should match");

@@ -77,7 +77,7 @@ class DefaultOtpTransactionServiceTest {
         assertNull(otpTransactionArgumentCaptorValue.id(), "ID should not be null");
         assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "Metadata should not be null");
 
-        verify(otpTransactionRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
@@ -85,7 +85,7 @@ class DefaultOtpTransactionServiceTest {
     @Test
     void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
         OtpTransaction otpTransaction = generateOtp("test@test.com", "123456");
-        when(otpTransactionRepository.retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient()))
+        when(otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient()))
                 .thenReturn(Optional.of(otpTransaction));
         OtpTransaction result = otpService.generate(mockedCommand);
 
@@ -106,7 +106,7 @@ class DefaultOtpTransactionServiceTest {
         assertEquals(otpTransaction.id(), result.id(), "ID should match existing ID");
         assertEquals("test metadata", result.metadata(), "Metadata should not be null");
 
-        verify(otpTransactionRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
@@ -120,7 +120,7 @@ class DefaultOtpTransactionServiceTest {
                     .build());
         }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpTransactionRepository, times(1)).retrieveRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 
@@ -197,6 +197,8 @@ class DefaultOtpTransactionServiceTest {
         verify(otpTransactionRepository, times(1))
                 .save(argThat(savedOtp -> savedOtp.attemptCount() == 3 && savedOtp.updatedAt() != null));
     }
+
+
 
     @Test
     void verify_givenOtpIsAlreadyVerified_thenShouldThrowException() {
