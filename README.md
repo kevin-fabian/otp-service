@@ -30,7 +30,7 @@ The service is secured with JWT token-based authentication and role-based author
 - Spring Boot 3.5.5
 - Spring Oauth2 Resource Server
 - JPA/Hibernate
-- PostgreSQL/H2
+- Postgres/H2
 - Swagger/OpenAPI 3.0
 - Zalando Logbook for logging HTTP requests
 - JUnit 5
