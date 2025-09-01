@@ -75,9 +75,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectBaseDir: app
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@5.3.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
