@@ -9,10 +9,20 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 ## Features
 
 - Generate OTP codes with configurable length and expiration
-- Multiple delivery methods (SMS, Email) support
-- OTP validation and status tracking
-- Configurable OTP purposes (Login, etc.)
-- Attempt counting and metadata support
+- Time-based OTP tested with Google Authenticator
+- Multiple delivery methods (SMS, Email) support and can be extended to support other channels
+- Stateless Secure REST APIs
+- JWT token-based and role-based authentication
+- Unit and Integration tests
+- Docker support
+- Gitflow branching model
+- OpenAPI 3.0 documentation
+- Swagger UI
+- Liquibase for database migrations
+- PostgreSQL/H2 database support
+- JPA/Hibernate ORM
+- Automated Intrumentation via OpenTelemetry
+- Http Request Logging via Zalando Logbook
 
 ## Tech Stack
 
@@ -22,6 +32,7 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 - JPA/Hibernate
 - PostgreSQL/H2
 - Swagger/OpenAPI 3.0
+- Zalando Logbook for logging HTTP requests
 - JUnit 5
 - Mockito
 - Lombok

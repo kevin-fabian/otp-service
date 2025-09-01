@@ -55,8 +55,8 @@ logbook:
       - token
   filter:
     enabled: true
+  predicate:
     include:
-      - uri: /v1/**
+      - /v1/**
     exclude:
-      - uri: /actuator/**
-      - status: 404
+      - /actuator/**
