@@ -76,6 +76,6 @@ jobs:
           distribution: 'temurin'
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@4.1.0
+        uses: SonarSource/sonarqube-scan-action@4.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
