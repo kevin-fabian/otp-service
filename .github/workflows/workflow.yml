@@ -42,7 +42,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      - name: Maven Verify
+      - name: Maven Package
         run: mvn -f app/pom.xml package -DskipTests
 
       - name: Run tests with coverage
