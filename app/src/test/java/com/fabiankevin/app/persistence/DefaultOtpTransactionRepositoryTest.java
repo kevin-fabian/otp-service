@@ -16,12 +16,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @DataJpaTest
 @ActiveProfiles("test")
-class DefaultOtpTransactionTransactionRepositoryTest {
+class DefaultOtpTransactionRepositoryTest {
     @Autowired
     private OtpTransactionRepository otpTransactionRepository;
     @Autowired
@@ -32,13 +33,13 @@ class DefaultOtpTransactionTransactionRepositoryTest {
     @TestConfiguration
     static class BeanConfiguration {
         @Bean
-        public OtpTransactionRepository defaultOtpRepository(JpaOtpRepository jpaOtpRepository){
+        public OtpTransactionRepository defaultOtpRepository(JpaOtpRepository jpaOtpRepository) {
             return new DefaultOtpTransactionRepository(jpaOtpRepository);
         }
     }
 
     @BeforeEach
-    void setup(){
+    void setup() {
         OffsetDateTime now = OffsetDateTime.now();
         mockedOtpTransaction = OtpTransaction.builder()
                 .purpose(OtpPurpose.LOGIN)
@@ -91,7 +92,7 @@ class DefaultOtpTransactionTransactionRepositoryTest {
     }
 
     @Test
-    void retrieveRecipientAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
+    void retrieveByRecipientAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
         OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
         Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
@@ -103,7 +104,7 @@ class DefaultOtpTransactionTransactionRepositoryTest {
     }
 
     @Test
-    void retrieveRecipientAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
+    void retrieveByRecipientAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
         mockedOtpTransaction = mockedOtpTransaction.toBuilder()
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
@@ -136,5 +137,33 @@ class DefaultOtpTransactionTransactionRepositoryTest {
         Assertions.assertThatThrownBy(() -> otpTransactionRepository.save(null))
                 .isInstanceOf(NullPointerException.class)
                 .describedAs("Expecting NullPointerException when saving null OTP");
+    }
+
+    @Test
+    void retrieveByRecipientAndStatusInAndNotExpired_givenMatchingStatusAndNotExpired_thenShouldReturnOtp() {
+        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
+
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository
+                .retrieveByRecipientAndStatusInAndNotExpired(
+                        mockedOtpTransaction.recipient(),
+                        List.of(OtpStatus.ACTIVE)
+                );
+
+        Assertions.assertThat(retrievedOtp).isPresent();
+        Assertions.assertThat(retrievedOtp.get())
+                .usingRecursiveComparison()
+                .isEqualTo(savedOtpTransaction);
+    }
+
+    @Test
+    void retrieveByRecipientAndStatusInAndNotExpired_givenNonMatchingStatusOrExpired_thenShouldReturnEmpty() {
+        otpTransactionRepository.saveAndFlush(mockedOtpTransaction.withStatus(OtpStatus.USED));
+
+        Optional<OtpTransaction> retrievedOtpStatus = otpTransactionRepository
+                .retrieveByRecipientAndStatusInAndNotExpired(
+                        mockedOtpTransaction.recipient(),
+                        List.of(OtpStatus.ACTIVE, OtpStatus.VERIFIED)
+                );
+        Assertions.assertThat(retrievedOtpStatus).isEmpty();
     }
 }
