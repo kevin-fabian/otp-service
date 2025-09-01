@@ -22,12 +22,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/totp")
+@RequestMapping("/v1/totp/users")
 @RequiredArgsConstructor
 public class TotpController {
     private final TotpService totpService;
 
-    @PostMapping("/users/register")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Register a user to Time-based One-Time Password (TOTP)",
             description = "Registers a new TOTP for the provided user reference ID.",
@@ -45,21 +45,21 @@ public class TotpController {
         return new TotpResponse(totpUser.id());
     }
 
-    @GetMapping(value = "/qr", produces = MediaType.IMAGE_PNG_VALUE)
-    @Operation(summary = "Get QR Code",
+    @GetMapping(value = "/{id}/qr", produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(summary = "Get QR Code by TOTP User Id",
             description = "Generates QR code image for TOTP setup.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "OK -Successfully generated QR code",
+                    @ApiResponse(responseCode = "200", description = "OK - Successfully generated QR code",
                             content = @Content(mediaType = MediaType.IMAGE_PNG_VALUE)),
                     @ApiResponse(responseCode = "404", description = "Not Found - User reference not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public ResponseEntity<byte[]> getQrCodeImage(
-            @Parameter(description = "User reference ID")
-            @RequestParam("userReferenceId") String userReferenceId) {
+            @Parameter(description = "TOTP User Id")
+            @PathVariable UUID id) {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
-                .body(totpService.getQrCodeImageByUserReferenceId(userReferenceId));
+                .body(totpService.getQrCodeImageById(id));
     }
 
     @PostMapping("/{id}/verify")

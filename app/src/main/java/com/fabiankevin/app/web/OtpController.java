@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/otp")
+@RequestMapping("/v1/otps")
 @RequiredArgsConstructor
 public class OtpController {
     private final OtpService otpService;
