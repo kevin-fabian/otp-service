@@ -104,8 +104,3 @@ otpTransaction:
 #  Length of generated OTP codes
   code-length: 6
 ```
-
-
-
-export MAIL_USERNAME=kevdev1119@gmail.com
-export MAIL_PASSWORD=e3jhqfsr1611
