@@ -1,10 +1,10 @@
 package com.fabiankevin.app.services;
 
-import com.fabiankevin.app.exceptions.TotpAlreadyRegisteredException;
-import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
-import com.fabiankevin.app.exceptions.TotpUnregisteredException;
+import com.fabiankevin.app.exceptions.*;
+import com.fabiankevin.app.models.OtpTransaction;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.models.enums.OtpPurpose;
+import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.persistence.TotpUserRepository;
 import com.fabiankevin.app.properties.TotpProperties;
@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -161,6 +162,89 @@ class DefaultTotpServiceTest {
     }
 
     @Test
+    void verify_givenVerifiedOtp_thenShouldThrowOtpInvalidStateException() {
+        String userReferenceId = "test-user";
+        String totpCode = "123456";
+        String secret = "test-secret";
+
+        TotpUser totpUser = TotpUser.builder()
+                .userReferenceId(userReferenceId)
+                .secret(secret)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
+        when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
+        when(otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(any(), any()))
+                .thenReturn(Optional.of(OtpTransaction.builder()
+                        .status(OtpStatus.VERIFIED)
+                        .otpCode("123456")
+                        .purpose(OtpPurpose.TRANSACTION)
+                        .recipient(userReferenceId)
+                        .expiresAt(OffsetDateTime.now().minusMinutes(2))
+                        .createdAt(OffsetDateTime.now())
+                        .updatedAt(OffsetDateTime.now())
+                        .build()));
+
+        VerifyTotpCommand verifyTotpCommand = VerifyTotpCommand.builder()
+                .userReferenceId(userReferenceId)
+                .code(totpCode)
+                .purpose(OtpPurpose.TRANSACTION)
+                .build();
+        assertThrows(
+                OtpInvalidStateException.class,
+                () -> service.verify(verifyTotpCommand),
+                "Should throw OtpInvalidStateException when there is already a verified OTP transaction");
+
+        verify(totpUserRepository).findByUserReferenceId(any());
+        verify(otpTransactionRepository).retrieveByRecipientAndStatusInAndNotExpired(any(), any());
+        verifyNoInteractions(totpCodeVerifier);
+    }
+
+    @Test
+    void verify_givenMaxAttemptExceeded_thenShouldThrowOtpMaxAttemptsExceededException() {
+        String userReferenceId = "test-user";
+        String totpCode = "123456";
+        String secret = "test-secret";
+
+        TotpUser totpUser = TotpUser.builder()
+                .userReferenceId(userReferenceId)
+                .secret(secret)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
+        when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
+        when(otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(any(), any()))
+                .thenReturn(Optional.of(OtpTransaction.builder()
+                        .status(OtpStatus.ACTIVE)
+                        .otpCode("123456")
+                        .purpose(OtpPurpose.TRANSACTION)
+                        .recipient(userReferenceId)
+                        .expiresAt(OffsetDateTime.now().minusMinutes(2))
+                        .createdAt(OffsetDateTime.now())
+                        .updatedAt(OffsetDateTime.now())
+                        .attemptCount(3)
+                        .build()));
+
+        VerifyTotpCommand verifyTotpCommand = VerifyTotpCommand.builder()
+                .userReferenceId(userReferenceId)
+                .code(totpCode)
+                .purpose(OtpPurpose.TRANSACTION)
+                .build();
+        assertThrows(
+                OtpAttemptLimitExceededException.class,
+                () -> service.verify(verifyTotpCommand),
+                "Should throw OtpAttemptLimitExceededException when max attempts are exceeded");
+
+        verify(totpUserRepository).findByUserReferenceId(any());
+        verify(otpTransactionRepository).retrieveByRecipientAndStatusInAndNotExpired(any(), any());
+        verifyNoInteractions(totpCodeVerifier);
+    }
+
+    @Test
     void verify_givenInvalidCode_thenShouldThrowException() {
         String userReferenceId = "test-user";
         String totpCode = "123456";
@@ -181,7 +265,8 @@ class DefaultTotpServiceTest {
                 .userReferenceId(userReferenceId)
                 .code(totpCode)
                 .purpose(OtpPurpose.TRANSACTION)
-                .build();;
+                .build();
+        ;
 
         assertThrows(TotpInvalidCodeException.class,
                 () -> service.verify(verifyCommand),
@@ -202,7 +287,8 @@ class DefaultTotpServiceTest {
                 .userReferenceId(userReferenceId)
                 .code(totpCode)
                 .purpose(OtpPurpose.TRANSACTION)
-                .build();;
+                .build();
+        ;
 
         assertThrows(TotpUnregisteredException.class,
                 () -> service.verify(verifyCommand),
@@ -211,4 +297,6 @@ class DefaultTotpServiceTest {
         verify(totpUserRepository).findByUserReferenceId(userReferenceId);
         verifyNoInteractions(totpCodeVerifier);
     }
+
+
 }
