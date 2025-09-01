@@ -3,8 +3,8 @@
 A RESTful service for generating and managing One-Time Passwords (OTP) built with Spring Boot. This service provides
 secure OTP generation and validation with support for multiple delivery methods like SMS and Email.
 
-This service is meant to be used by upstream service, this is why the security isn't configured here.
-If you are using a zero-trust model, then you may configure SSL or integrate Spring Oauth2 resource service.
+The service also supports Time-based OTP (TOTP) which is compatible with Google Authenticator.
+The service is secured with JWT token-based authentication and role-based authorization.
 
 ## Features
 
@@ -19,7 +19,7 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 - OpenAPI 3.0 documentation
 - Swagger UI
 - Liquibase for database migrations
-- PostgreSQL/H2 database support
+- Postgres/H2 database support
 - JPA/Hibernate ORM
 - Automated Intrumentation via OpenTelemetry
 - Http Request Logging via Zalando Logbook
@@ -47,7 +47,7 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 3. Run `mvn clean install` to build
 4. Start the application with `mvn spring-boot:run`
 
-## Implementing `OtpClient`
+## Implementing `OtpClient` for other delivery methods
 
 ```java
 public class SMSOtpClient implements OtpClient {
@@ -58,7 +58,7 @@ public class SMSOtpClient implements OtpClient {
     }
 }
 
-public class PushNotifcationOtpClient implements OtpClient {
+public class WhatsAppOtpClient implements OtpClient {
 
     @Override
     public void send(Otp otpTransaction) {
@@ -66,7 +66,8 @@ public class PushNotifcationOtpClient implements OtpClient {
     }
 }
 ```
-The OtpClient implementation configuration
+
+## The OtpClient implementation configuration
 ```java
 @Configuration
 public class AppConfig {
@@ -78,7 +79,7 @@ public class AppConfig {
                 Map.of(
                         DeliveryMethod.EMAIL, emailOtpClient,
                         DeliveryMethod.SMS, new SMSOtpClient(),
-                        DeliveryMethod.SMS, new PushNotifcationOtpClient()
+                        DeliveryMethod.SMS, new WhatsAppOtpClient()
                 ),
                 new DefaultOtpGenerator(),
                 otpProperties);
@@ -86,34 +87,30 @@ public class AppConfig {
 }
 ```
 
-
-In a scenario where you need to support another notification service such as SMS, PushNotification, Viber, etc.
-Implement `OtpClient` and register the new client at `AppConfig.defaultOtpService`
-
 ## API Documentation
-
 API documentation is available via Swagger UI:
 
 - Local: http://localhost:8079/swagger-ui.html
 - API Docs: http://localhost:8079/v3/api-docs
 
-## Available Endpoints
-
-### OTP Management
-
-- `POST /v1/otps` - Generate new OTP
-- `POST /v1/otps/{otpId}/verify` - Validate OTP
 
 ## Configuration
-
 The following properties can be configured:
 
 ```yml
-otpTransaction:
+# OTP configuration
+otp:
 #  OTP validity period in minutes
   expiration-minutes: 1
 #  OTP max attempts
   max-attempts: 3
 #  Length of generated OTP codes
   code-length: 6
+
+#Time-based OTP configuration
+totp:
+  algorithm: SHA1
+  digits: 6
+  period-seconds: 30
+  issuer: App Label
 ```
