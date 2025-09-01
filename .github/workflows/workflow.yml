@@ -41,9 +41,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven
-
+l
       - name: Maven Verify
-        run: mvn -f app/pom.xml verify -DskipTests
+        run: mvn -f app/pom.xml package -DskipTests
 
       - name: Run tests with coverage
         run: mvn -f app/pom.xml test jacoco:report
