@@ -17,15 +17,17 @@ If you are using a zero-trust model, then you may configure SSL or integrate Spr
 ## Tech Stack
 
 - Java 21
-- Spring Boot 3.x
+- Spring Boot 3.5.5
+- Spring Oauth2 Resource Server
 - JPA/Hibernate
-- PostgreSQL
+- PostgreSQL/H2
 - Swagger/OpenAPI 3.0
 - JUnit 5
 - Mockito
 - Lombok
 - Maven
 - Liquibase
+- Gitflow
 
 ## Setup & Usage
 
@@ -81,15 +83,15 @@ Implement `OtpClient` and register the new client at `AppConfig.defaultOtpServic
 
 API documentation is available via Swagger UI:
 
-- Local: http://localhost:8081/swagger-ui.html
-- API Docs: http://localhost:8081/v3/api-docs
+- Local: http://localhost:8079/swagger-ui.html
+- API Docs: http://localhost:8079/v3/api-docs
 
 ## Available Endpoints
 
 ### OTP Management
 
-- `POST /v1/otpTransaction` - Generate new OTP
-- `POST /v1/otpTransaction/verify` - Validate OTP(Not yet implemented)
+- `POST /v1/otps` - Generate new OTP
+- `POST /v1/otps/{otpId}/verify` - Validate OTP
 
 ## Configuration
 
