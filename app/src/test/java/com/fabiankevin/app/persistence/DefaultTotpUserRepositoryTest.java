@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -77,5 +79,32 @@ class DefaultTotpUserRepositoryTest {
         Optional<TotpUser> foundUser = totpUserRepository.findByUserReferenceId("non-existent");
 
         assertTrue(foundUser.isEmpty(), "User should not be found");
+    }
+
+    @Test
+    void findById_givenValidId_thenShouldReturnTotpUser() {
+        TotpUser savedTotpUser = totpUserRepository.save(totpUser);
+
+        Optional<TotpUser> foundUser = totpUserRepository.findById(savedTotpUser.id());
+
+        assertTrue(foundUser.isPresent(), "User should be found");
+        assertEquals(savedTotpUser.id(), foundUser.get().id(), "Ids should match");
+        assertEquals(savedTotpUser.userReferenceId(), foundUser.get().userReferenceId(), "User reference IDs should match");
+        assertEquals(savedTotpUser.secret(), foundUser.get().secret(), "Secrets should match");
+        assertEquals(savedTotpUser.createdAt(), foundUser.get().createdAt(), "CreatedAt should match");
+        assertEquals(savedTotpUser.updatedAt(), foundUser.get().updatedAt(), "UpdatedAt should match");
+    }
+
+    @Test
+    void findById_givenInvalidId_thenShouldReturnEmpty() {
+        Optional<TotpUser> foundUser = totpUserRepository.findById(UUID.randomUUID());
+
+        assertTrue(foundUser.isEmpty(), "User should not be found");
+    }
+
+    @Test
+    void findById_givenNullId_thenShouldThrowException() {
+        assertThrows(InvalidDataAccessApiUsageException.class, () -> totpUserRepository.findById(null),
+                "Should throw InvalidDataAccessApiUsageException when ID is null");
     }
 }
