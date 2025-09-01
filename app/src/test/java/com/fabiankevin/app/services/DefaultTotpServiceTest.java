@@ -150,7 +150,7 @@ class DefaultTotpServiceTest {
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
 
         assertDoesNotThrow(() -> service.verify(VerifyTotpCommand.builder()
-                        .id(totpUser.id())
+                        .userReferenceId(userReferenceId)
                         .code(totpCode)
                         .purpose(OtpPurpose.TRANSACTION)
                         .build()),
@@ -178,7 +178,7 @@ class DefaultTotpServiceTest {
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(false);
 
         VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
-                .id(totpUser.id())
+                .userReferenceId(userReferenceId)
                 .code(totpCode)
                 .purpose(OtpPurpose.TRANSACTION)
                 .build();;
@@ -199,7 +199,7 @@ class DefaultTotpServiceTest {
         when(totpUserRepository.findById(any())).thenReturn(Optional.empty());
 
         VerifyTotpCommand verifyCommand = VerifyTotpCommand.builder()
-                .id(null)
+                .userReferenceId(userReferenceId)
                 .code(totpCode)
                 .purpose(OtpPurpose.TRANSACTION)
                 .build();;

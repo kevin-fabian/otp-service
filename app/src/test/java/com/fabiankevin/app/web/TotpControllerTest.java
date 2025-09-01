@@ -6,6 +6,7 @@ import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.entities.OtpTransactionEntity;
 import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
+import com.fabiankevin.app.persistence.jpa.JpaTotpUserRepository;
 import com.fabiankevin.app.services.totp.TotpCodeVerifier;
 import com.fabiankevin.app.services.totp.TotpService;
 import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
@@ -31,7 +32,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +45,9 @@ class TotpControllerTest {
     @MockitoSpyBean
     @Autowired
     private TotpService totpService;
+
+    @Autowired
+    private JpaTotpUserRepository jpaTotpUserRepository;
 
     @MockitoBean
     private TotpCodeVerifier totpCodeVerifier;
@@ -62,6 +65,7 @@ class TotpControllerTest {
     @BeforeEach
     void reset() {
         jpaOtpRepository.deleteAll();
+        jpaTotpUserRepository.deleteAll();
 
         mockJwt = Jwt.withTokenValue("token")
                 .header("alg", "RS256")
@@ -79,45 +83,18 @@ class TotpControllerTest {
     void register_givenValidRequest_thenShouldReturnTotpResponse() throws Exception {
         mockMvc.perform(post("/v1/totp/users")
                         .with(jwt().jwt(mockJwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                 {
-                                    "user_reference_id": "{{user_profile_id}}"
-                                 }
-                                """.replace("{{user_profile_id}}", USER_PROFILE_ID.toString())))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists());
     }
 
     @Test
-    void register_givenInvalidRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/v1/totp/users")
-                        .with(jwt().jwt(mockJwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation Failed"))
-                .andExpect(jsonPath("$.errors[0]").value("User reference ID must not be blank"));
-    }
-
-    @Test
-    void register_givenNullRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/v1/totp/users")
-                        .with(jwt().jwt(mockJwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("null"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void getQrCodeImage_givenValidUserReferenceId_thenShouldReturnQrCodeImage() throws Exception {
-        String userProfileId = UUID.randomUUID().toString();
         TotpUser totpUser = totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(userProfileId)
+                .userProfileId(USER_PROFILE_ID.toString())
                 .build());
 
-        mockMvc.perform(get("/v1/totp/users/{id}/qr", totpUser.id())
+        mockMvc.perform(get("/v1/totp/users/qr", totpUser.id())
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -125,24 +102,14 @@ class TotpControllerTest {
     }
 
     @Test
-    void getQrCodeImage_givenInvalidUserReferenceId_thenShouldReturnNotFound() throws Exception {
-        mockMvc.perform(get("/v1/totp/users/{id}/qr", UUID.randomUUID())
-                        .with(jwt().jwt(mockJwt))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.details").value("Unregistered"));
-    }
-
-    @Test
     void verify_givenValidRequest_thenShouldVerifySuccessfully() throws Exception {
-        String userProfileId = UUID.randomUUID().toString();
-        TotpUser totpUser = totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(userProfileId)
+        totpService.registerTotp(RegisterTotpCommand.builder()
+                .userProfileId(USER_PROFILE_ID.toString())
                 .build());
 
         when(totpCodeVerifier.verify(any(), eq("123456"))).thenReturn(true);
 
-        mockMvc.perform(post("/v1/totp/users/{id}/verify", totpUser.id())
+        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -159,21 +126,20 @@ class TotpControllerTest {
         assertEquals(OtpStatus.VERIFIED, otpTransactionEntity.getStatus(), "Otp status should be VERIFIED");
         assertEquals(0, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
         assertEquals("123456", otpTransactionEntity.getOtpCode(), "otp code should match");
-        assertEquals(userProfileId, otpTransactionEntity.getRecipient(), "user profile id should match");
-        assertEquals(DeliveryMethod.TOTP, otpTransactionEntity.getDeliveryMethod(), "user profile id should match");
+        assertEquals(USER_PROFILE_ID.toString(), otpTransactionEntity.getRecipient(), "user profile userReferenceId should match");
+        assertEquals(DeliveryMethod.TOTP, otpTransactionEntity.getDeliveryMethod(), "user profile userReferenceId should match");
         assertEquals(OtpPurpose.LOGIN, otpTransactionEntity.getPurpose(), "purpose should be LOGIN");
     }
 
     @Test
-    void verify_givenIncorrectOnFirstAttempt_thenAttemptCountShouldBeOneAndStatusShouldBeActive() throws Exception {
-        String userProfileId = UUID.randomUUID().toString();
-        TotpUser totpUser = totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(userProfileId)
+    void verify_givenIncorrectCode_thenAttemptCountShouldBeOneAndStatusShouldBeActive() throws Exception {
+        totpService.registerTotp(RegisterTotpCommand.builder()
+                .userProfileId(USER_PROFILE_ID.toString())
                 .build());
 
         when(totpCodeVerifier.verify(any(), eq("123456"))).thenReturn(false);
 
-        mockMvc.perform(post("/v1/totp/users/{id}/verify", totpUser.id())
+        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -193,7 +159,7 @@ class TotpControllerTest {
 
     @Test
     void verify_givenInvalidRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/v1/totp/users/{id}/verify", UUID.randomUUID())
+        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", UUID.randomUUID())
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
@@ -203,7 +169,7 @@ class TotpControllerTest {
 
     @Test
     void verify_givenUnregisteredUser_thenShouldReturnNotFound() throws Exception {
-        mockMvc.perform(post("/v1/totp/users/{id}/verify", UUID.randomUUID())
+        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", UUID.randomUUID())
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

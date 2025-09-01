@@ -86,7 +86,7 @@ public class DefaultTotpService implements TotpService {
     @Transactional(noRollbackFor = TotpInvalidCodeException.class)
     public void verify(VerifyTotpCommand command) {
         String code = command.code();
-        TotpUser totpUser = totpUserRepository.findById(command.id())
+        TotpUser totpUser = totpUserRepository.findByUserReferenceId(command.userReferenceId())
                 .orElseThrow(TotpUnregisteredException::new);
 
         OffsetDateTime now = OffsetDateTime.now();
