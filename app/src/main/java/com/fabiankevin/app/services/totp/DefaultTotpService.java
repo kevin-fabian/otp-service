@@ -19,7 +19,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -56,21 +55,6 @@ public class DefaultTotpService implements TotpService {
     @Override
     public byte[] getQrCodeImageByUserReferenceId(String userReferenceId) {
         TotpUser totpUser = totpUserRepository.findByUserReferenceId(userReferenceId)
-                .orElseThrow(TotpUnregisteredException::new);
-
-        return qrGenerator.generate(GenerateQrCodeCommand.builder()
-                .algorithm(properties.getAlgorithm())
-                .label(totpUser.userReferenceId())
-                .secret(totpUser.secret())
-                .issuer(properties.getIssuer())
-                .digits(properties.getDigits())
-                .period(Duration.ofSeconds(properties.getPeriodSeconds()))
-                .build());
-    }
-
-    @Override
-    public byte[] getQrCodeImageById(UUID id) {
-        TotpUser totpUser = totpUserRepository.findById(id)
                 .orElseThrow(TotpUnregisteredException::new);
 
         return qrGenerator.generate(GenerateQrCodeCommand.builder()

@@ -43,11 +43,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      - name: Maven Package
-        run: mvn -f app/pom.xml package -DskipTests
-
-      - name: Run tests with coverage
-        run: mvn -f app/pom.xml test jacoco:report
+      - name: Maven Verify
+        run: mvn -f app/pom.xml verify jacoco:report
 
       - name: Upload test results
         if: always()
