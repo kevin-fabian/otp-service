@@ -29,7 +29,7 @@ public class TotpController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Register a user to Time-based One-Time Password (TOTP)",
-            description = "Registers a new TOTP for the provided user reference ID.",
+            description = "Registers a new TOTP user based from JWT",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Created - Successfully registered a user to TOTP service",
                             content = @Content(mediaType = "application/json",
@@ -43,7 +43,7 @@ public class TotpController {
     }
 
     @GetMapping(value = "/qr", produces = MediaType.IMAGE_PNG_VALUE)
-    @Operation(summary = "Get QR Code by TOTP User Id",
+    @Operation(summary = "Get QR Code by JWT",
             description = "Generates QR code image for TOTP setup.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK - Successfully generated QR code",
@@ -52,7 +52,6 @@ public class TotpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public ResponseEntity<byte[]> getQrCodeImage(
-            @Parameter(description = "TOTP User Id")
             @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)

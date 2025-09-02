@@ -8,7 +8,13 @@ import io.swagger.v3.oas.annotations.security.OAuthFlows;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 @OpenAPIDefinition(
-        info = @Info(title = "${spring.application.name}", version = "v1", description = "API Documentation for the Otp Service")
+        info = @Info(title = "${spring.application.name}",
+                version = "v1",
+                description = """
+                        The OTP service is responsible for handling various types of OTP (One-Time Password) generation and verification, including TOTP (Time-based One-Time Password) and SMS-based OTPs.
+                        It provides secure authentication mechanisms for users through different channels.
+                        The service supports integration with external systems for sending OTPs via SMS and offers endpoints for managing OTP-related operations.
+                        """)
 )
 @SecurityScheme(
         name = "Spring Oauth2",
