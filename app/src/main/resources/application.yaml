@@ -57,6 +57,6 @@ logbook:
     enabled: true
   predicate:
     include:
-      - /v1/**
+      - path: /v1/**
     exclude:
-      - /actuator/**
+      - path: /actuator/**

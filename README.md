@@ -64,7 +64,7 @@ public class WhatsAppOtpClient implements OtpClient {
 }
 ```
 
-## The OtpClient implementation configuration
+## The OtpClient implementations are added to `AppConfig`
 ```java
 @Configuration
 public class AppConfig {
