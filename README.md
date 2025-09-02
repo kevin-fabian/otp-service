@@ -1,10 +1,7 @@
 # OTP Service
 
-A RESTful service for generating and managing One-Time Passwords (OTP) built with Spring Boot. This service provides
-secure OTP generation and validation with support for multiple delivery methods like SMS and Email.
-
-The service also supports Time-based OTP (TOTP) which is compatible with Google Authenticator.
-The service is secured with JWT token-based authentication and role-based authorization.
+A RESTful service for generating and managing One-Time Passwords (OTP) built with Spring Boot. 
+This service provides secure OTP generation and validation with support for multiple delivery methods like SMS and Email. It also supports Time-based OTP (TOTP) compatible with Google Authenticator, and is secured with JWT token-based authentication and role-based authorization.
 
 ## Features
 
