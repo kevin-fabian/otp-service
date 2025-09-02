@@ -189,7 +189,7 @@
                         <exclude>**/config/**</exclude>
                         <exclude>**/models/**</exclude>
                         <exclude>**/exceptions/**</exclude>
-                        <exclude>**Local**</exclude>
+                        <exclude>**/Local*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
