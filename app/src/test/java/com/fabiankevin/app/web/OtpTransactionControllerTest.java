@@ -73,8 +73,8 @@ class OtpTransactionControllerTest {
                 .status(OtpStatus.ACTIVE)
                 .metadata("test metadata")
                 .attemptCount(0)
-                .createdAt(now)
-                .updatedAt(now)
+                .createdAt(now.toInstant())
+                .updatedAt(now.toInstant())
                 .expiresAt(now.plusMinutes(1))
                 .otpCode("123456")
                 .build();

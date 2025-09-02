@@ -16,6 +16,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.exceptions.TemplateInputException;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -36,7 +37,8 @@ class EmailOtpTransactionClientTest {
                 .recipient("test@example.com")
                 .purpose(OtpPurpose.LOGIN)
                 .status(OtpStatus.ACTIVE)
-                .createdAt(OffsetDateTime.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .expiresAt(OffsetDateTime.now().plusMinutes(10))
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .attemptCount(0)

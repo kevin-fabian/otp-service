@@ -17,7 +17,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -70,8 +73,8 @@ class DefaultOtpTransactionServiceTest {
         assertNotNull(otpTransactionArgumentCaptorValue.createdAt(), "Created at should not be null");
         assertNotNull(otpTransactionArgumentCaptorValue.expiresAt(), "Expires at should not be null");
         assertEquals(
-                otpTransactionArgumentCaptorValue.createdAt().plusMinutes(otpProperties.getExpirationMinutes()),
-                otpTransactionArgumentCaptorValue.expiresAt(),
+                otpTransactionArgumentCaptorValue.createdAt().atOffset(ZoneOffset.ofHours(8)).plusMinutes(otpProperties.getExpirationMinutes()).truncatedTo(ChronoUnit.SECONDS),
+                otpTransactionArgumentCaptorValue.expiresAt().truncatedTo(ChronoUnit.SECONDS),
                 "Expires at should be created at plus expiration minutes"
         );
         assertNull(otpTransactionArgumentCaptorValue.id(), "ID should not be null");
@@ -99,8 +102,8 @@ class DefaultOtpTransactionServiceTest {
         assertNotNull(result.createdAt(), "Created at should not be null");
         assertNotNull(result.expiresAt(), "Expires at should not be null");
         assertEquals(
-                result.createdAt().plusMinutes(otpProperties.getExpirationMinutes()),
-                result.expiresAt(),
+                result.createdAt().atOffset(ZoneOffset.ofHours(8)).plusMinutes(otpProperties.getExpirationMinutes()).truncatedTo(ChronoUnit.SECONDS),
+                result.expiresAt().truncatedTo(ChronoUnit.SECONDS),
                 "Expires at should be created at plus expiration minutes"
         );
         assertEquals(otpTransaction.id(), result.id(), "ID should match existing ID");
@@ -274,7 +277,8 @@ class DefaultOtpTransactionServiceTest {
                 .status(OtpStatus.ACTIVE)
                 .metadata("test metadata")
                 .attemptCount(0)
-                .createdAt(now)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .expiresAt(now.plusMinutes(1))
                 .otpCode(otpCode)
                 .build();

@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -41,8 +42,8 @@ public class DefaultOtpService implements OtpService {
                             .status(OtpStatus.ACTIVE)
                             .otpCode(otpCode)
                             .attemptCount(0)
-                            .createdAt(now)
-                            .updatedAt(now)
+                            .createdAt(now.toInstant())
+                            .updatedAt(now.toInstant())
                             .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                             .build();
 
@@ -68,7 +69,7 @@ public class DefaultOtpService implements OtpService {
                     int attempts = otp.attemptCount();
 
                     OffsetDateTime now = OffsetDateTime.now();
-                    var otpBuilder = otp.toBuilder().updatedAt(now);
+                    var otpBuilder = otp.toBuilder().updatedAt(now.toInstant());
                     if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
                         otpBuilder.status(OtpStatus.EXPIRED);
                     } else {
@@ -107,7 +108,7 @@ public class DefaultOtpService implements OtpService {
                             if (otp.status() == OtpStatus.VERIFIED) {
                                 otpTransactionRepository.save(otp.toBuilder()
                                         .status(OtpStatus.USED)
-                                        .updatedAt(OffsetDateTime.now())
+                                        .updatedAt(Instant.now())
                                         .build());
                             } else {
                                 throw new OtpInvalidStateException();

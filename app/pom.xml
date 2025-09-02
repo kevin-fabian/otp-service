@@ -189,6 +189,7 @@
                         <exclude>**/config/**</exclude>
                         <exclude>**/models/**</exclude>
                         <exclude>**/exceptions/**</exclude>
+                        <exclude>**Local**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

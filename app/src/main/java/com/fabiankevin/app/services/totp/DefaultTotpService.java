@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -74,7 +74,7 @@ public class DefaultTotpService implements TotpService {
         TotpUser totpUser = totpUserRepository.findByUserReferenceId(command.userReferenceId())
                 .orElseThrow(TotpUnregisteredException::new);
 
-        OffsetDateTime now = OffsetDateTime.now();
+        Instant now = Instant.now();
 
         OtpTransaction otpTransaction = otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(
                         totpUser.userReferenceId(),
@@ -87,7 +87,7 @@ public class DefaultTotpService implements TotpService {
                         .deliveryMethod(DeliveryMethod.TOTP)
                         .createdAt(now)
                         .updatedAt(now)
-                        .expiresAt(now.plusSeconds(60))
+                        .expiresAt(now.atOffset(ZoneOffset.UTC).plusSeconds(60))
                         .attemptCount(0)
                         .build());
 

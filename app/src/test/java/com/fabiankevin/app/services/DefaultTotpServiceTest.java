@@ -183,8 +183,8 @@ class DefaultTotpServiceTest {
                         .purpose(OtpPurpose.TRANSACTION)
                         .recipient(userReferenceId)
                         .expiresAt(OffsetDateTime.now().minusMinutes(2))
-                        .createdAt(OffsetDateTime.now())
-                        .updatedAt(OffsetDateTime.now())
+                        .createdAt(Instant.now())
+                        .updatedAt(Instant.now())
                         .build()));
 
         VerifyTotpCommand verifyTotpCommand = VerifyTotpCommand.builder()
@@ -224,8 +224,8 @@ class DefaultTotpServiceTest {
                         .purpose(OtpPurpose.TRANSACTION)
                         .recipient(userReferenceId)
                         .expiresAt(OffsetDateTime.now().minusMinutes(2))
-                        .createdAt(OffsetDateTime.now())
-                        .updatedAt(OffsetDateTime.now())
+                        .createdAt(Instant.now())
+                        .updatedAt(Instant.now())
                         .attemptCount(3)
                         .build()));
 

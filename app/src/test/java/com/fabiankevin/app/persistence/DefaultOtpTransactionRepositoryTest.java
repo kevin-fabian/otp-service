@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +49,8 @@ class DefaultOtpTransactionRepositoryTest {
                 .status(OtpStatus.ACTIVE)
                 .metadata("{}")
                 .attemptCount(0)
-                .createdAt(now)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .expiresAt(now.plusMinutes(1))
                 .otpCode("123456")
                 .build();

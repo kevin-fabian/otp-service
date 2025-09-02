@@ -6,6 +6,7 @@ import com.fabiankevin.app.models.enums.OtpStatus;
 import lombok.Builder;
 import lombok.With;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -20,9 +21,9 @@ public record OtpTransaction(
         String recipient,
         OtpPurpose purpose,
         OtpStatus status,
-        OffsetDateTime createdAt,
+        Instant createdAt,
         OffsetDateTime expiresAt,
-        OffsetDateTime updatedAt,
+        Instant updatedAt,
         DeliveryMethod deliveryMethod,
         int attemptCount,
         String metadata
