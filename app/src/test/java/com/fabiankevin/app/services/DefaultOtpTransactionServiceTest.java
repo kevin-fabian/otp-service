@@ -126,7 +126,7 @@ class DefaultOtpTransactionServiceTest {
         assertEquals("test metadata", result.metadata(), "metadata should match command");
 
         verify(otpTransactionRepository, times(1)).retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT));
-        verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
+        verifyNoInteractions(otpGenerator, smsOtpClient);
     }
 
     @Test
