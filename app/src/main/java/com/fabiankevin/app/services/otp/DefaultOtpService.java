@@ -15,9 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.fabiankevin.app.models.enums.OtpStatus.NEW;
+import static com.fabiankevin.app.models.enums.OtpStatus.SENT;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -30,7 +34,14 @@ public class DefaultOtpService implements OtpService {
     @Override
     @Transactional
     public OtpTransaction generate(GenerateOtpCommand command) {
-        return otpTransactionRepository.retrieveByRecipientAndActiveStatus(command.recipient())
+        return otpTransactionRepository.retrieveByRecipientAndStatus(command.recipient(), List.of(NEW, SENT))
+                .map(otpTransaction -> {
+                    if( otpTransaction.isNew() ){
+                        sendOtp(otpTransaction);
+                    }
+
+                    return otpTransaction;
+                })
                 .orElseGet(() -> {
                     OffsetDateTime now = OffsetDateTime.now();
                     String otpCode = otpGenerator.generateCode(properties.getCodeLength());
@@ -39,7 +50,7 @@ public class DefaultOtpService implements OtpService {
                             .purpose(command.purpose())
                             .recipient(command.recipient())
                             .metadata(command.metadata())
-                            .status(OtpStatus.NEW)
+                            .status(NEW)
                             .otpCode(otpCode)
                             .attemptCount(0)
                             .createdAt(now.toInstant())
@@ -47,7 +58,7 @@ public class DefaultOtpService implements OtpService {
                             .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                             .build();
 
-                    OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(otpTransaction);
+                    OtpTransaction savedOtpTransaction = otpTransactionRepository.save(otpTransaction);
                     sendOtp(savedOtpTransaction);
                     return savedOtpTransaction;
                 });
@@ -59,7 +70,7 @@ public class DefaultOtpService implements OtpService {
         otpClient.sendAsync(otpTransaction)
                 .thenAcceptAsync(_ -> otpTransactionRepository.saveAndFlush(otpTransaction.toBuilder()
                         .updatedAt(Instant.now())
-                        .status(OtpStatus.SENT)
+                        .status(SENT)
                         .build()));
     }
 

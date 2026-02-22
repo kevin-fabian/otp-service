@@ -21,10 +21,14 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
+import static com.fabiankevin.app.models.enums.OtpStatus.NEW;
+import static com.fabiankevin.app.models.enums.OtpStatus.SENT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -55,8 +59,18 @@ class DefaultOtpTransactionServiceTest {
     }
 
     @Test
-    void generate_givenValidCommand_thenShouldSucceed() {
+    void generate_givenNewOtp_thenShouldSucceed() {
+        when(otpTransactionRepository.retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT)))
+                .thenReturn(Optional.empty());
+        when(otpTransactionRepository.save(any())).thenAnswer(invocation -> {
+            OtpTransaction otpTransaction = invocation.getArgument(0);
+            return otpTransaction.toBuilder()
+                    .id(UUID.randomUUID())
+                    .build();
+        });
         when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
+        when(smsOtpClient.sendAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+
         otpService.generate(mockedCommand);
 
         ArgumentCaptor<OtpTransaction> otpArgumentCaptor = ArgumentCaptor.forClass(OtpTransaction.class);
@@ -64,31 +78,31 @@ class DefaultOtpTransactionServiceTest {
         OtpTransaction otpTransactionArgumentCaptorValue = otpArgumentCaptor.getValue();
 
         // Assertions for the Otp object
-        assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "OTP code should match generated code");
-        assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "Recipient should match command");
-        assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "Purpose should match command");
-        assertEquals(OtpStatus.SENT, otpTransactionArgumentCaptorValue.status(), "Status should match command");
-        assertEquals(mockedCommand.deliveryMethod(), otpTransactionArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
-        assertEquals(0, otpTransactionArgumentCaptorValue.attemptCount(), "Attempt count should be 0");
-        assertNotNull(otpTransactionArgumentCaptorValue.createdAt(), "Created at should not be null");
-        assertNotNull(otpTransactionArgumentCaptorValue.expiresAt(), "Expires at should not be null");
+        assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "otpCode should match generated code");
+        assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "recipient should match command");
+        assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "purpose should match command");
+        assertEquals(OtpStatus.SENT, otpTransactionArgumentCaptorValue.status(), "status should match be `SENT`");
+        assertEquals(mockedCommand.deliveryMethod(), otpTransactionArgumentCaptorValue.deliveryMethod(), "deliveryMethod should match command");
+        assertEquals(0, otpTransactionArgumentCaptorValue.attemptCount(), "attemptCount should be 0");
+        assertNotNull(otpTransactionArgumentCaptorValue.createdAt(), "createdAt should not be null");
+        assertNotNull(otpTransactionArgumentCaptorValue.expiresAt(), "expiresAt should not be null");
         assertEquals(
                 otpTransactionArgumentCaptorValue.createdAt().atOffset(ZoneOffset.ofHours(8)).plusMinutes(otpProperties.getExpirationMinutes()).truncatedTo(ChronoUnit.SECONDS),
                 otpTransactionArgumentCaptorValue.expiresAt().truncatedTo(ChronoUnit.SECONDS),
-                "Expires at should be created at plus expiration minutes"
+                "expiresAt should be createdAt plus expiration minutes"
         );
-        assertNull(otpTransactionArgumentCaptorValue.id(), "ID should not be null");
-        assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "Metadata should not be null");
+        assertNotNull(otpTransactionArgumentCaptorValue.id(), "id should not be null");
+        assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "metadata should match command");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatus(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipient(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
 
     @Test
-    void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
+    void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSucceed() {
         OtpTransaction otpTransaction = generateOtp("test@test.com", "123456");
-        when(otpTransactionRepository.retrieveByRecipientAndActiveStatus(mockedCommand.recipient()))
+        when(otpTransactionRepository.retrieveByRecipient(mockedCommand.recipient()))
                 .thenReturn(Optional.of(otpTransaction));
         OtpTransaction result = otpService.generate(mockedCommand);
 
@@ -109,7 +123,7 @@ class DefaultOtpTransactionServiceTest {
         assertEquals(otpTransaction.id(), result.id(), "ID should match existing ID");
         assertEquals("test metadata", result.metadata(), "Metadata should not be null");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatus(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipient(mockedCommand.recipient());
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
@@ -123,7 +137,7 @@ class DefaultOtpTransactionServiceTest {
                     .build());
         }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatus(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipient(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 

@@ -33,7 +33,7 @@ public class DefaultOtpTransactionRepository implements OtpTransactionRepository
     }
 
     @Override
-    public Optional<OtpTransaction> retrieveByRecipientAndActiveStatus(String recipient) {
+    public Optional<OtpTransaction> retrieveByRecipient(String recipient) {
         return jpaOtpRepository.findByRecipientAndStatus(recipient, OtpStatus.VERIFIED)
                 .map(OtpTransactionEntity::toModel);
     }

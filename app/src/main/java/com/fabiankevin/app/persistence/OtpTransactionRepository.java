@@ -11,6 +11,6 @@ public interface OtpTransactionRepository {
     OtpTransaction saveAndFlush(OtpTransaction otpTransaction);
     OtpTransaction save(OtpTransaction otpTransaction);
     Optional<OtpTransaction> retrieveById(UUID id);
-    Optional<OtpTransaction> retrieveByRecipientAndActiveStatus(String recipient);
+    Optional<OtpTransaction> retrieveByRecipient(String recipient);
     Optional<OtpTransaction> retrieveByRecipientAndStatus(String recipient, List<OtpStatus> otpStatuses);
 }

@@ -49,4 +49,8 @@ public record OtpTransaction(
     public boolean isSent() {
         return this.status == OtpStatus.SENT;
     }
+
+    public boolean isNew() {
+        return this.status == OtpStatus.NEW;
+    }
 }
