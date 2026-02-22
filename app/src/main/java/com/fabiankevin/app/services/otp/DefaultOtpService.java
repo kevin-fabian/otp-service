@@ -68,7 +68,7 @@ public class DefaultOtpService implements OtpService {
         OtpClient otpClient = Optional.ofNullable(otpClientMap.get(otpTransaction.deliveryMethod()))
                 .orElseThrow(() -> new UnsupportedDeliveryMethodException(otpTransaction.deliveryMethod()));
         otpClient.sendAsync(otpTransaction)
-                .thenAcceptAsync(_ -> otpTransactionRepository.saveAndFlush(otpTransaction.toBuilder()
+                .thenAcceptAsync(_ -> otpTransactionRepository.save(otpTransaction.toBuilder()
                         .updatedAt(Instant.now())
                         .status(SENT)
                         .build()));

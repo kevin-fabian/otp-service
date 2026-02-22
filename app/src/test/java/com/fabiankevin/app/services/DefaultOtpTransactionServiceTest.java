@@ -74,7 +74,7 @@ class DefaultOtpTransactionServiceTest {
         otpService.generate(mockedCommand);
 
         ArgumentCaptor<OtpTransaction> otpArgumentCaptor = ArgumentCaptor.forClass(OtpTransaction.class);
-        verify(otpTransactionRepository, times(1)).saveAndFlush(otpArgumentCaptor.capture());
+        verify(otpTransactionRepository, times(1)).save(otpArgumentCaptor.capture());
         OtpTransaction otpTransactionArgumentCaptorValue = otpArgumentCaptor.getValue();
 
         // Assertions for the Otp object
@@ -94,37 +94,57 @@ class DefaultOtpTransactionServiceTest {
         assertNotNull(otpTransactionArgumentCaptorValue.id(), "id should not be null");
         assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "metadata should match command");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipient(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT));
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
-        verify(smsOtpClient, times(1)).send(any());
+        verify(smsOtpClient, times(1)).sendAsync(any());
     }
 
     @Test
-    void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSucceed() {
-        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456");
-        when(otpTransactionRepository.retrieveByRecipient(mockedCommand.recipient()))
+    void generate_givenSentOtp_thenShouldNotSendAgainAndReturnOtp() {
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456").toBuilder()
+                .deliveryMethod(DeliveryMethod.SMS)
+                .status(SENT)
+                .build();
+
+        when(otpTransactionRepository.retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT)))
                 .thenReturn(Optional.of(otpTransaction));
+
         OtpTransaction result = otpService.generate(mockedCommand);
 
-        // Assertions for the Otp object
-        assertEquals("123456", result.otpCode(), "OTP code should match generated code");
-        assertEquals(otpTransaction.recipient(), result.recipient(), "Recipient should match command");
-        assertEquals(otpTransaction.purpose(), result.purpose(), "Purpose should match command");
-        assertEquals(OtpStatus.SENT, result.status(), "otpStatus should be SENT");
-        assertEquals(otpTransaction.deliveryMethod(), result.deliveryMethod(), "Delivery method should match command");
-        assertEquals(0, result.attemptCount(), "Attempt count should be 0");
-        assertNotNull(result.createdAt(), "Created at should not be null");
-        assertNotNull(result.expiresAt(), "Expires at should not be null");
+        assertEquals("123456", result.otpCode(), "otpCode should match generated code");
+        assertEquals(otpTransaction.recipient(), result.recipient(), "recipient should match command");
+        assertEquals(otpTransaction.purpose(), result.purpose(), "purpose should match command");
+        assertEquals(otpTransaction.deliveryMethod(), result.deliveryMethod(), "deliveryMethod should match command");
+        assertEquals(0, result.attemptCount(), "attemptCount should be 0");
+        assertNotNull(result.createdAt(), "createdAt should not be null");
+        assertNotNull(result.expiresAt(), "expiresAt should not be null");
         assertEquals(
                 result.createdAt().atOffset(ZoneOffset.ofHours(8)).plusMinutes(otpProperties.getExpirationMinutes()).truncatedTo(ChronoUnit.SECONDS),
                 result.expiresAt().truncatedTo(ChronoUnit.SECONDS),
-                "Expires at should be created at plus expiration minutes"
+                "expiresAt should be createdAt plus expiration minutes"
         );
-        assertEquals(otpTransaction.id(), result.id(), "ID should match existing ID");
-        assertEquals("test metadata", result.metadata(), "Metadata should not be null");
+        assertEquals(otpTransaction.id(), result.id(), "id should match existing id");
+        assertEquals("test metadata", result.metadata(), "metadata should match command");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipient(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT));
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
+    }
+
+    @Test
+    void generate_givenExistingNewOtp_thenShouldUpdateStatusToSent() {
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456").toBuilder()
+                .deliveryMethod(DeliveryMethod.SMS)
+                .status(NEW)
+                .build();
+
+        when(otpTransactionRepository.retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT)))
+                .thenReturn(Optional.of(otpTransaction));
+        when(smsOtpClient.sendAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+
+        otpService.generate(mockedCommand);
+
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT));
+        verify(otpTransactionRepository, times(1)).save(argThat(otp -> otp.status() == SENT && otp.updatedAt() != null));
     }
 
     @Test
