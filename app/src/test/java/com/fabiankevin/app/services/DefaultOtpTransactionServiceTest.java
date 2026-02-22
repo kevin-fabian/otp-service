@@ -160,10 +160,11 @@ class DefaultOtpTransactionServiceTest {
 
     @Test
     void verify_givenValidOtpCode_thenShouldSucceed() {
-        OtpTransaction otpTransaction = spy(generateOtp("test@test.com", "123456"));
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "123456").toBuilder()
+                .status(SENT)
+                .build();
         when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
-        when(otpTransaction.status()).thenReturn(OtpStatus.USED);
-        when(otpTransactionRepository.save(any(OtpTransaction.class))).thenReturn(otpTransaction);
+        when(otpTransactionRepository.save(any(OtpTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         otpService.verify(VerifyOtpCommand.builder()
                 .id(otpTransaction.id())
@@ -171,7 +172,8 @@ class DefaultOtpTransactionServiceTest {
                 .build());
 
         verify(otpTransactionRepository, times(1)).retrieveById(otpTransaction.id());
-        verify(otpTransactionRepository, times(1)).save(any());
+        verify(otpTransactionRepository, times(1)).save(argThat(savedOtp ->
+                savedOtp.status() == OtpStatus.VERIFIED && savedOtp.updatedAt() != null));
     }
 
     @Test
@@ -191,8 +193,11 @@ class DefaultOtpTransactionServiceTest {
     }
 
     @Test
-    void verify_givenIncorrectOtpCode_thenShouldIncrementAttempts() {
-        OtpTransaction otpTransaction = generateOtp("test@test.com", "654321");
+    void verify_givenInvalidOtpCode_thenShouldIncrementAttempts() {
+        OtpTransaction otpTransaction = generateOtp("test@test.com", "654321").toBuilder()
+                .status(SENT)
+                .attemptCount(0)
+                .build();
         when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
         when(otpTransactionRepository.save(any(OtpTransaction.class))).thenReturn(otpTransaction);
 
@@ -213,6 +218,7 @@ class DefaultOtpTransactionServiceTest {
     void verify_givenMaxAttemptsExceeded_thenShouldThrowException() {
         OtpTransaction otpTransaction = spy(generateOtp("test@test.com", "654321").toBuilder()
                 .attemptCount(2)
+                .status(SENT)
                 .build());
         when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
         when(otpProperties.getMaxAttempts()).thenReturn(3);
@@ -230,7 +236,6 @@ class DefaultOtpTransactionServiceTest {
         verify(otpTransactionRepository, times(1))
                 .save(argThat(savedOtp -> savedOtp.attemptCount() == 3 && savedOtp.updatedAt() != null));
     }
-
 
 
     @Test
@@ -257,6 +262,7 @@ class DefaultOtpTransactionServiceTest {
     @Test
     void verify_givenExpiredOtp_thenShouldThrowException() {
         OtpTransaction otpTransaction = generateOtp("test@test.com", "123456").toBuilder()
+                .status(SENT)
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
         when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
@@ -272,7 +278,7 @@ class DefaultOtpTransactionServiceTest {
                 "Should throw OtpExpiredException when OTP has expired");
 
         verify(otpTransactionRepository, times(1)).retrieveById(otpTransaction.id());
-        verify(otpTransactionRepository, times(1)).save(any(OtpTransaction.class));
+        verify(otpTransactionRepository, never()).save(any(OtpTransaction.class));
     }
 
     @Test
