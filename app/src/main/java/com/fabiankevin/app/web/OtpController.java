@@ -86,6 +86,6 @@ public class OtpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void markOtpAsUsed(@PathVariable UUID id) {
-        otpService.markAsUsed(id);
+        otpService.useOtp(id);
     }
 }

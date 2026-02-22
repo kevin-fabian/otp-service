@@ -67,7 +67,7 @@ class DefaultOtpTransactionServiceTest {
         assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "OTP code should match generated code");
         assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "Recipient should match command");
         assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "Purpose should match command");
-        assertEquals(OtpStatus.ACTIVE, otpTransactionArgumentCaptorValue.status(), "Status should match command");
+        assertEquals(OtpStatus.SENT, otpTransactionArgumentCaptorValue.status(), "Status should match command");
         assertEquals(mockedCommand.deliveryMethod(), otpTransactionArgumentCaptorValue.deliveryMethod(), "Delivery method should match command");
         assertEquals(0, otpTransactionArgumentCaptorValue.attemptCount(), "Attempt count should be 0");
         assertNotNull(otpTransactionArgumentCaptorValue.createdAt(), "Created at should not be null");
@@ -80,7 +80,7 @@ class DefaultOtpTransactionServiceTest {
         assertNull(otpTransactionArgumentCaptorValue.id(), "ID should not be null");
         assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "Metadata should not be null");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatus(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).send(any());
     }
@@ -88,7 +88,7 @@ class DefaultOtpTransactionServiceTest {
     @Test
     void generate_givenExistingValidOtp_thenShouldReturnExistingOtpAndSuceed() {
         OtpTransaction otpTransaction = generateOtp("test@test.com", "123456");
-        when(otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient()))
+        when(otpTransactionRepository.retrieveByRecipientAndActiveStatus(mockedCommand.recipient()))
                 .thenReturn(Optional.of(otpTransaction));
         OtpTransaction result = otpService.generate(mockedCommand);
 
@@ -96,7 +96,7 @@ class DefaultOtpTransactionServiceTest {
         assertEquals("123456", result.otpCode(), "OTP code should match generated code");
         assertEquals(otpTransaction.recipient(), result.recipient(), "Recipient should match command");
         assertEquals(otpTransaction.purpose(), result.purpose(), "Purpose should match command");
-        assertEquals(OtpStatus.ACTIVE, result.status(), "Status should match command");
+        assertEquals(OtpStatus.SENT, result.status(), "otpStatus should be SENT");
         assertEquals(otpTransaction.deliveryMethod(), result.deliveryMethod(), "Delivery method should match command");
         assertEquals(0, result.attemptCount(), "Attempt count should be 0");
         assertNotNull(result.createdAt(), "Created at should not be null");
@@ -109,7 +109,7 @@ class DefaultOtpTransactionServiceTest {
         assertEquals(otpTransaction.id(), result.id(), "ID should match existing ID");
         assertEquals("test metadata", result.metadata(), "Metadata should not be null");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatus(mockedCommand.recipient());
         verifyNoInteractions(otpClientMap, otpGenerator, smsOtpClient);
     }
 
@@ -123,7 +123,7 @@ class DefaultOtpTransactionServiceTest {
                     .build());
         }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatusAndNotExpired(mockedCommand.recipient());
+        verify(otpTransactionRepository, times(1)).retrieveByRecipientAndActiveStatus(mockedCommand.recipient());
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 
@@ -170,7 +170,7 @@ class DefaultOtpTransactionServiceTest {
                 .otpCode("123456")
                 .build();
 
-        assertThrows(OtpVerificationException.class,
+        assertThrows(InvalidOtpException.class,
                 () -> otpService.verify(command),
                 "Should throw OtpVerificationException when OTP code is incorrect");
 
@@ -185,7 +185,6 @@ class DefaultOtpTransactionServiceTest {
                 .build());
         when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
         when(otpProperties.getMaxAttempts()).thenReturn(3);
-        when(otpTransaction.status()).thenReturn(OtpStatus.INVALIDATED);
         when(otpTransactionRepository.save(any(OtpTransaction.class))).thenReturn(otpTransaction);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
@@ -207,16 +206,16 @@ class DefaultOtpTransactionServiceTest {
     void verify_givenOtpIsAlreadyVerified_thenShouldThrowException() {
         OtpTransaction otpTransaction = spy(generateOtp("test@test.com", "123456").toBuilder()
                 .attemptCount(2)
+                .status(OtpStatus.VERIFIED)
                 .build());
         when(otpTransactionRepository.retrieveById(otpTransaction.id())).thenReturn(Optional.of(otpTransaction));
-        when(otpTransaction.isActive()).thenReturn(false);
 
         VerifyOtpCommand command = VerifyOtpCommand.builder()
                 .id(otpTransaction.id())
                 .otpCode("123456")
                 .build();
 
-        OtpInvalidStateException otpAlreadyVerifiedException = assertThrows(OtpInvalidStateException.class,
+        assertThrows(OtpInvalidStateException.class,
                 () -> otpService.verify(command),
                 "Should throw OtpInvalidStateException when OTP is already verified");
 
@@ -274,7 +273,7 @@ class DefaultOtpTransactionServiceTest {
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipient(recipient)
-                .status(OtpStatus.ACTIVE)
+                .status(OtpStatus.NEW)
                 .metadata("test metadata")
                 .attemptCount(0)
                 .createdAt(Instant.now())

@@ -19,6 +19,7 @@ import org.thymeleaf.exceptions.TemplateInputException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.*;
@@ -26,7 +27,8 @@ import static org.mockito.Mockito.*;
 class EmailOtpTransactionClientTest {
     private final JavaMailSender mailSender = mock(JavaMailSender.class);
     private final TemplateEngine templateEngine = mock(TemplateEngine.class);
-    private final OtpClient emailOtpClient = new EmailOtpClient(mailSender, templateEngine, "Subject", 10);
+    private final Executor executor = mock(Executor.class);
+    private final OtpClient emailOtpClient = new EmailOtpClient(mailSender, templateEngine, "OTP", 10, executor);
     private OtpTransaction mockedOtpTransaction;
 
     @BeforeEach
@@ -36,7 +38,7 @@ class EmailOtpTransactionClientTest {
                 .otpCode("123456")
                 .recipient("test@example.com")
                 .purpose(OtpPurpose.LOGIN)
-                .status(OtpStatus.ACTIVE)
+                .status(OtpStatus.NEW)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .expiresAt(OffsetDateTime.now().plusMinutes(10))

@@ -5,13 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.CompletableFuture;
+
 @Component
-@Profile("local-h2")
+@Profile("autotest")
 @Slf4j
-// This class is used in local development to avoid sending real emails.
-public class LocalEmailOtpClient implements OtpClient {
+public class AutotestEmailOtpClient implements OtpClient {
     @Override
     public void send(OtpTransaction otpTransaction) {
         log.info("Otp sent to {}: {} (local mode)", otpTransaction.recipient(), otpTransaction.otpCode());
+    }
+
+    @Override
+    public CompletableFuture<Void> sendAsync(OtpTransaction otpTransaction) {
+        return CompletableFuture.runAsync(() -> send(otpTransaction));
     }
 }

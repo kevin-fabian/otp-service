@@ -5,7 +5,7 @@ spring:
   application:
     name: otp-service
   profiles:
-    active: local-postgres
+    active: autotest
   threads:
     virtual:
       enabled: true
@@ -21,6 +21,7 @@ spring:
       resourceserver:
         jwt:
           jws-algorithms: RS256
+          audiences: otp-client
 
 management:
   endpoints:
@@ -60,3 +61,7 @@ logbook:
       - path: /v1/**
     exclude:
       - path: /actuator/**
+
+otel:
+  sdk:
+    disabled: true

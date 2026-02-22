@@ -76,18 +76,18 @@ public class DefaultTotpService implements TotpService {
 
         Instant now = Instant.now();
 
-        OtpTransaction otpTransaction = otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(
+        OtpTransaction otpTransaction = otpTransactionRepository.retrieveByRecipientAndStatus(
                         totpUser.userReferenceId(),
-                        List.of(OtpStatus.ACTIVE, OtpStatus.VERIFIED))
+                        List.of(OtpStatus.VERIFIED))
                 .orElse(OtpTransaction.builder()
                         .recipient(totpUser.userReferenceId())
                         .otpCode(code)
                         .purpose(command.purpose())
-                        .status(OtpStatus.ACTIVE)
+                        .status(OtpStatus.NEW)
                         .deliveryMethod(DeliveryMethod.TOTP)
                         .createdAt(now)
                         .updatedAt(now)
-                        .expiresAt(now.atOffset(ZoneOffset.UTC).plusSeconds(60))
+                        .expiresAt(now.atOffset(ZoneOffset.UTC).plusMinutes(5))
                         .attemptCount(0)
                         .build());
 
@@ -102,7 +102,6 @@ public class DefaultTotpService implements TotpService {
         if (!totpCodeVerifier.verify(totpUser.secret(), code)) {
             otpTransactionRepository.save(otpTransaction.toBuilder()
                     .attemptCount(otpTransaction.attemptCount() + 1)
-                    .status(OtpStatus.ACTIVE)
                     .updatedAt(now)
                     .build());
             throw new TotpInvalidCodeException();

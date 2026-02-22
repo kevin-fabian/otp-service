@@ -8,10 +8,10 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
   mail:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
@@ -22,16 +22,10 @@ spring:
           jwk-set-uri: http://localhost:9000/oauth2/jwks
           audiences:
             - downstream-client
-
   h2:
     console:
       enabled: true
       path: /h2-console
-
-logging:
-  level:
-    org.zalando.logbook: TRACE
-    com.github.fabiankevin: DEBUG
 
 management:
   otlp:

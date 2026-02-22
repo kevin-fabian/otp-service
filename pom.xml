@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.github.fabiankevin</groupId>
-        <artifactId>microweb-spring-boot-parent-starter</artifactId>
-        <version>0.0.29</version>
+        <artifactId>spring-boot-starter-lemon-parent</artifactId>
+        <version>0.1.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.fabiankevin</groupId>
@@ -33,13 +33,7 @@
         <tag/>
         <url/>
     </scm>
-    <repositories>
-        <repository>
-            <id>github-public</id>
-            <url>https://maven.pkg.github.com/kevin-fabian/microweb-spring-boot-parent-starter</url>
-        </repository>
-    </repositories>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
     </properties>
 </project>

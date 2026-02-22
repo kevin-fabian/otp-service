@@ -21,7 +21,7 @@ public class DefaultTotpUserRepository implements TotpUserRepository {
 
     @Override
     public Optional<TotpUser> findByUserReferenceId(String userReferenceId) {
-        return jpaTotpUserRepository.findByUserReferenceId(userReferenceId)
+        return jpaTotpUserRepository.findByUserId(userReferenceId)
                 .map(TotpUserEntity::toModel);
     }
 

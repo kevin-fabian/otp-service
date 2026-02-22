@@ -10,5 +10,5 @@ public interface OtpService {
     OtpTransaction generate(GenerateOtpCommand command);
     void verify(VerifyOtpCommand command);
     OtpTransaction retrieveById(UUID otpId);
-    void markAsUsed(UUID otpId);
+    void useOtp(UUID otpId);
 }

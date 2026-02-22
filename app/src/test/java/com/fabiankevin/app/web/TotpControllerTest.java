@@ -13,8 +13,8 @@ import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -61,7 +61,7 @@ class TotpControllerTest {
 
     private Jwt mockJwt;
 
-    private final static UUID USER_PROFILE_ID = UUID.randomUUID();
+    private static final UUID USER_PROFILE_ID = UUID.randomUUID();
 
     @BeforeEach
     void reset() {
@@ -197,7 +197,7 @@ class TotpControllerTest {
         verify(totpService, times(1)).verify(any());
 
         OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findAll().getFirst();
-        assertEquals(OtpStatus.ACTIVE, otpTransactionEntity.getStatus(), "Otp status should be ACTIVE");
+        assertEquals(OtpStatus.SENT, otpTransactionEntity.getStatus(), "Otp status should be SENT");;
         assertEquals(1, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
     }
 

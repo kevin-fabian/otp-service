@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface JpaTotpUserRepository extends JpaRepository<TotpUserEntity, UUID> {
-    Optional<TotpUserEntity> findByUserReferenceId(String userReferenceId);
+    Optional<TotpUserEntity> findByUserId(String userId);
 }

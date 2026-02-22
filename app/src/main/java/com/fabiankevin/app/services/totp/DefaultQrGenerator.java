@@ -35,7 +35,7 @@ public class DefaultQrGenerator implements QrGenerator {
             return qrGenerator.generate(qrData);
         } catch (QrGenerationException | IllegalArgumentException e) {
             log.error("Failed to generate QR code", e);
-            throw new QrGeneratorException("Failed to generate QR code", e);
+            throw new QrGeneratorException("Failed to generate QR code");
         }
     }
 }

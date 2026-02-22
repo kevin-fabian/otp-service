@@ -14,9 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -56,7 +55,7 @@ class OtpTransactionControllerTest {
     @MockitoBean
     private EmailOtpClient emailOtpClient;
 
-    @MockBean
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     private OtpTransaction mockedOtpTransaction;
@@ -70,7 +69,7 @@ class OtpTransactionControllerTest {
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipient("test@test.com")
-                .status(OtpStatus.ACTIVE)
+                .status(OtpStatus.NEW)
                 .metadata("test metadata")
                 .attemptCount(0)
                 .createdAt(now.toInstant())
@@ -281,7 +280,7 @@ class OtpTransactionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(otpService, times(1)).markAsUsed(generatedOtpTransaction.id());
+        verify(otpService, times(1)).useOtp(generatedOtpTransaction.id());
 
         OtpTransaction otpTransaction = otpTransactionRepository.retrieveById(generatedOtpTransaction.id()).get();
         assertEquals(OtpStatus.USED, otpTransaction.status(), "Otp status should be USED");
@@ -296,7 +295,7 @@ class OtpTransactionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(otpService, times(1)).markAsUsed(generatedOtpTransaction.id());
+        verify(otpService, times(1)).useOtp(generatedOtpTransaction.id());
     }
 
     @Test

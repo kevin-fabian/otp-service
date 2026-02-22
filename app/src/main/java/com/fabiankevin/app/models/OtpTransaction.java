@@ -11,7 +11,6 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.fabiankevin.app.models.enums.OtpStatus.ACTIVE;
 
 @Builder(toBuilder = true)
 @With
@@ -47,7 +46,7 @@ public record OtpTransaction(
         }
     }
 
-    public boolean isActive(){
-        return ACTIVE == status;
+    public boolean isSent() {
+        return this.status == OtpStatus.SENT;
     }
 }

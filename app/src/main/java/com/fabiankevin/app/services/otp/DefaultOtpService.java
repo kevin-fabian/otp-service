@@ -30,7 +30,7 @@ public class DefaultOtpService implements OtpService {
     @Override
     @Transactional
     public OtpTransaction generate(GenerateOtpCommand command) {
-        return otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(command.recipient())
+        return otpTransactionRepository.retrieveByRecipientAndActiveStatus(command.recipient())
                 .orElseGet(() -> {
                     OffsetDateTime now = OffsetDateTime.now();
                     String otpCode = otpGenerator.generateCode(properties.getCodeLength());
@@ -39,7 +39,7 @@ public class DefaultOtpService implements OtpService {
                             .purpose(command.purpose())
                             .recipient(command.recipient())
                             .metadata(command.metadata())
-                            .status(OtpStatus.ACTIVE)
+                            .status(OtpStatus.NEW)
                             .otpCode(otpCode)
                             .attemptCount(0)
                             .createdAt(now.toInstant())
@@ -48,51 +48,55 @@ public class DefaultOtpService implements OtpService {
                             .build();
 
                     OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(otpTransaction);
-
-                    Optional.ofNullable(otpClientMap.get(otpTransaction.deliveryMethod()))
-                            .orElseThrow(() -> new UnsupportedDeliveryMethodException(otpTransaction.deliveryMethod()))
-                            .send(savedOtpTransaction);
-
+                    sendOtp(savedOtpTransaction);
                     return savedOtpTransaction;
                 });
     }
 
+    private void sendOtp(OtpTransaction otpTransaction) {
+        OtpClient otpClient = Optional.ofNullable(otpClientMap.get(otpTransaction.deliveryMethod()))
+                .orElseThrow(() -> new UnsupportedDeliveryMethodException(otpTransaction.deliveryMethod()));
+        otpClient.sendAsync(otpTransaction)
+                .thenAcceptAsync(_ -> otpTransactionRepository.saveAndFlush(otpTransaction.toBuilder()
+                        .updatedAt(Instant.now())
+                        .status(OtpStatus.SENT)
+                        .build()));
+    }
+
     @Override
-    @Transactional(dontRollbackOn = {OtpVerificationException.class, OtpAttemptLimitExceededException.class, OtpExpiredException.class})
+    @Transactional(dontRollbackOn = {InvalidOtpException.class, OtpAttemptLimitExceededException.class, OtpExpiredException.class})
     public void verify(VerifyOtpCommand command) {
-        OtpTransaction savedOtpTransaction = otpTransactionRepository.retrieveById(command.id())
-                .map(otp -> {
-                    if (!otp.isActive()) {
-                        throw new OtpInvalidStateException();
-                    }
+        final String code = command.otpCode();
+        otpTransactionRepository.retrieveById(command.id())
+                .ifPresentOrElse(otp -> {
+                            if (!otp.isSent()) {
+                                throw new OtpInvalidStateException();
+                            }
 
-                    int attempts = otp.attemptCount();
+                            int attempts = otp.attemptCount();
+                            OffsetDateTime now = OffsetDateTime.now();
+                            var otpBuilder = otp.toBuilder().updatedAt(now.toInstant());
+                            if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
+                                throw new OtpExpiredException();
+                            } else {
+                                if (otp.otpCode().equalsIgnoreCase(code)) {
+                                    otpBuilder.status(OtpStatus.VERIFIED).build();
+                                    otpTransactionRepository.save(otpBuilder.build());
+                                } else {
+                                    attempts += 1;
+                                    if (attempts >= properties.getMaxAttempts()) {
+                                        otpTransactionRepository.save(otpBuilder.attemptCount(attempts).build());
+                                        throw new OtpAttemptLimitExceededException();
+                                    }
 
-                    OffsetDateTime now = OffsetDateTime.now();
-                    var otpBuilder = otp.toBuilder().updatedAt(now.toInstant());
-                    if (otp.expiresAt().isBefore(OffsetDateTime.now())) {
-                        otpBuilder.status(OtpStatus.EXPIRED);
-                    } else {
-                        if (otp.otpCode().equalsIgnoreCase(command.otpCode())) {
-                            otpBuilder.status(OtpStatus.VERIFIED).build();
-                        }
-
-                        attempts = otp.attemptCount() + 1;
-                        if (attempts >= properties.getMaxAttempts()) {
-                            otpBuilder.status(OtpStatus.INVALIDATED);
-                        }
-                    }
-
-                    return otpTransactionRepository.save(otpBuilder.attemptCount(attempts).build());
-                })
-                .orElseThrow(OtpNotFoundException::new);
-
-        switch (savedOtpTransaction.status()) {
-            case ACTIVE -> throw new OtpVerificationException();
-            case EXPIRED -> throw new OtpExpiredException();
-            case INVALIDATED -> throw new OtpAttemptLimitExceededException();
-            default -> log.info("Otp has been verified.");
-        }
+                                    otpTransactionRepository.save(otpBuilder.attemptCount(attempts).build());
+                                    throw new InvalidOtpException(code);
+                                }
+                            }
+                        },
+                        () -> {
+                            throw new OtpNotFoundException();
+                        });
     }
 
     @Override
@@ -102,7 +106,7 @@ public class DefaultOtpService implements OtpService {
     }
 
     @Override
-    public void markAsUsed(UUID otpId) {
+    public void useOtp(UUID otpId) {
         otpTransactionRepository.retrieveById(otpId)
                 .ifPresentOrElse(otp -> {
                             if (otp.status() == OtpStatus.VERIFIED) {

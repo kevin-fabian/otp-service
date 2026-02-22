@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "totp_users",  indexes = {
-        @Index(name = "totp_users_user_reference_id_uidx", columnList = "userProfileId", unique = true)
+        @Index(name = "totp_users_user_id_uidx", columnList = "userId", unique = true)
 })
 @Data
 @Builder(toBuilder = true)
@@ -22,7 +22,7 @@ public class TotpUserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String userReferenceId;
+    private String userId;
     private String secret;
     @Column(name = "created_at")
     private Instant createdAt;
@@ -32,7 +32,7 @@ public class TotpUserEntity {
     public static TotpUserEntity from(TotpUser totpUser) {
         return TotpUserEntity.builder()
                 .id(totpUser.id())
-                .userReferenceId(totpUser.userReferenceId())
+                .userId(totpUser.userReferenceId())
                 .secret(totpUser.secret())
                 .createdAt(totpUser.createdAt())
                 .updatedAt(totpUser.updatedAt())
@@ -42,7 +42,7 @@ public class TotpUserEntity {
     public TotpUser toModel() {
         return new TotpUser(
                 this.id,
-                this.userReferenceId,
+                this.userId,
                 this.secret,
                 this.createdAt,
                 this.updatedAt

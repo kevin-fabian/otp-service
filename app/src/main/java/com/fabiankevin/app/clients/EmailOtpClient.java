@@ -13,6 +13,9 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.exceptions.TemplateEngineException;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
 @Slf4j
 @RequiredArgsConstructor
 public class EmailOtpClient implements OtpClient {
@@ -20,6 +23,7 @@ public class EmailOtpClient implements OtpClient {
     private final TemplateEngine templateEngine;
     private final String subject;
     private final int expirationMinutes;
+    private final Executor executor;
 
     @Override
     public void send(OtpTransaction otpTransaction) {
@@ -41,7 +45,12 @@ public class EmailOtpClient implements OtpClient {
             log.info("Email sent successfully to {}", to);
         } catch (MailException | MessagingException | TemplateEngineException exception) {
             log.error("Error sending email to {}", to, exception);
-            throw new EmailNotificationException(to, exception);
+            throw new EmailNotificationException(to);
         }
+    }
+
+    @Override
+    public CompletableFuture<Void> sendAsync(OtpTransaction otpTransaction) {
+        return CompletableFuture.runAsync(() -> send(otpTransaction), executor);
     }
 }

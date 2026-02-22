@@ -1,9 +1,10 @@
 package com.fabiankevin.app.exceptions;
 
-import com.github.fabiankevin.microwebspringbootstarter.exceptions.ApiException;
 
-public class OtpAttemptLimitExceededException extends ApiException {
+import com.github.fabiankevin.lemon.web.exceptions.BusinessRuleException;
+
+public class OtpAttemptLimitExceededException extends BusinessRuleException {
     public OtpAttemptLimitExceededException() {
-        super("OTP attempt limit exceeded", 429);
+        super("OTP attempt limit exceeded", 429, "AUTH_OTP_003");
     }
 }

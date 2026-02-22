@@ -10,7 +10,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,7 +46,7 @@ class DefaultOtpTransactionRepositoryTest {
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
                 .recipient("test@test.com")
-                .status(OtpStatus.ACTIVE)
+                .status(OtpStatus.NEW)
                 .metadata("{}")
                 .attemptCount(0)
                 .createdAt(Instant.now())
@@ -70,8 +70,7 @@ class DefaultOtpTransactionRepositoryTest {
     @Test
     void saveAndFlush_givenNullOtp_thenShouldThrowException() {
         Assertions.assertThatThrownBy(() -> otpTransactionRepository.saveAndFlush(null))
-                .isInstanceOf(NullPointerException.class)
-                .describedAs("Expecting null pointer exception");
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -94,32 +93,20 @@ class DefaultOtpTransactionRepositoryTest {
     }
 
     @Test
-    void retrieveByRecipientAndActiveStatusAndNotExpired_givenActiveAndNotExpiredOtp_thenShouldReturnOtp() {
-        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
-
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
-
-        Assertions.assertThat(retrievedOtp).isPresent();
-        Assertions.assertThat(retrievedOtp.get())
-                .usingRecursiveComparison()
-                .isEqualTo(savedOtpTransaction);
-    }
-
-    @Test
-    void retrieveByRecipientAndActiveStatusAndNotExpired_givenExpiredOtp_thenShouldReturnEmpty() {
+    void retrieveByRecipientAndActiveStatus_givenExpiredOtp_thenShouldReturnEmpty() {
         mockedOtpTransaction = mockedOtpTransaction.toBuilder()
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
         otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired(mockedOtpTransaction.recipient());
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatus(mockedOtpTransaction.recipient());
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
     void retrieveRecipient_thenShouldReturnEmpty() {
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatusAndNotExpired("nonexistent@test.com");
+        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipientAndActiveStatus("nonexistent@test.com");
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
@@ -142,13 +129,13 @@ class DefaultOtpTransactionRepositoryTest {
     }
 
     @Test
-    void retrieveByRecipientAndStatusInAndNotExpired_givenMatchingStatusAndNotExpired_thenShouldReturnOtp() {
+    void retrieveByRecipientAndStatusInAndNotExpired_givenMatchingStatus_thenShouldReturnOtp() {
         OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
 
         Optional<OtpTransaction> retrievedOtp = otpTransactionRepository
-                .retrieveByRecipientAndStatusInAndNotExpired(
+                .retrieveByRecipientAndStatus(
                         mockedOtpTransaction.recipient(),
-                        List.of(OtpStatus.ACTIVE)
+                        List.of(OtpStatus.NEW)
                 );
 
         Assertions.assertThat(retrievedOtp).isPresent();
@@ -162,9 +149,9 @@ class DefaultOtpTransactionRepositoryTest {
         otpTransactionRepository.saveAndFlush(mockedOtpTransaction.withStatus(OtpStatus.USED));
 
         Optional<OtpTransaction> retrievedOtpStatus = otpTransactionRepository
-                .retrieveByRecipientAndStatusInAndNotExpired(
+                .retrieveByRecipientAndStatus(
                         mockedOtpTransaction.recipient(),
-                        List.of(OtpStatus.ACTIVE, OtpStatus.VERIFIED)
+                        List.of(OtpStatus.NEW, OtpStatus.SENT, OtpStatus.VERIFIED)
                 );
         Assertions.assertThat(retrievedOtpStatus).isEmpty();
     }

@@ -1,6 +1,6 @@
 package com.fabiankevin.app.exceptions;
 
-import com.github.fabiankevin.microwebspringbootstarter.exceptions.ApiException;
+import com.github.fabiankevin.lemon.web.exceptions.ApiException;
 
 public class TotpUnregisteredException extends ApiException {
     public TotpUnregisteredException() {

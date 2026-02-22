@@ -176,7 +176,7 @@ class DefaultTotpServiceTest {
 
         when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
-        when(otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(any(), any()))
+        when(otpTransactionRepository.retrieveByRecipientAndStatus(any(), any()))
                 .thenReturn(Optional.of(OtpTransaction.builder()
                         .status(OtpStatus.VERIFIED)
                         .otpCode("123456")
@@ -198,7 +198,7 @@ class DefaultTotpServiceTest {
                 "Should throw OtpInvalidStateException when there is already a verified OTP transaction");
 
         verify(totpUserRepository).findByUserReferenceId(any());
-        verify(otpTransactionRepository).retrieveByRecipientAndStatusInAndNotExpired(any(), any());
+        verify(otpTransactionRepository).retrieveByRecipientAndStatus(any(), any());
         verifyNoInteractions(totpCodeVerifier);
     }
 
@@ -217,9 +217,9 @@ class DefaultTotpServiceTest {
 
         when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
-        when(otpTransactionRepository.retrieveByRecipientAndStatusInAndNotExpired(any(), any()))
+        when(otpTransactionRepository.retrieveByRecipientAndStatus(any(), any()))
                 .thenReturn(Optional.of(OtpTransaction.builder()
-                        .status(OtpStatus.ACTIVE)
+                        .status(OtpStatus.SENT)
                         .otpCode("123456")
                         .purpose(OtpPurpose.TRANSACTION)
                         .recipient(userReferenceId)
@@ -240,7 +240,7 @@ class DefaultTotpServiceTest {
                 "Should throw OtpAttemptLimitExceededException when max attempts are exceeded");
 
         verify(totpUserRepository).findByUserReferenceId(any());
-        verify(otpTransactionRepository).retrieveByRecipientAndStatusInAndNotExpired(any(), any());
+        verify(otpTransactionRepository).retrieveByRecipientAndStatus(any(), any());
         verifyNoInteractions(totpCodeVerifier);
     }
 
@@ -266,7 +266,6 @@ class DefaultTotpServiceTest {
                 .code(totpCode)
                 .purpose(OtpPurpose.TRANSACTION)
                 .build();
-        ;
 
         assertThrows(TotpInvalidCodeException.class,
                 () -> service.verify(verifyCommand),
@@ -288,7 +287,6 @@ class DefaultTotpServiceTest {
                 .code(totpCode)
                 .purpose(OtpPurpose.TRANSACTION)
                 .build();
-        ;
 
         assertThrows(TotpUnregisteredException.class,
                 () -> service.verify(verifyCommand),
@@ -297,6 +295,4 @@ class DefaultTotpServiceTest {
         verify(totpUserRepository).findByUserReferenceId(userReferenceId);
         verifyNoInteractions(totpCodeVerifier);
     }
-
-
 }
