@@ -34,10 +34,12 @@ public class DefaultOtpService implements OtpService {
     @Override
     @Transactional
     public OtpTransaction generate(GenerateOtpCommand command) {
+        OtpClient otpClient = Optional.ofNullable(otpClientMap.get(command.deliveryMethod()))
+                .orElseThrow(() -> new UnsupportedDeliveryMethodException(command.deliveryMethod()));
         return otpTransactionRepository.retrieveByRecipientAndStatus(command.recipient(), List.of(NEW, SENT))
                 .map(otpTransaction -> {
                     if( otpTransaction.isNew() ){
-                        sendOtp(otpTransaction);
+                        sendOtp(otpClient, otpTransaction);
                     }
 
                     return otpTransaction;
@@ -59,14 +61,12 @@ public class DefaultOtpService implements OtpService {
                             .build();
 
                     OtpTransaction savedOtpTransaction = otpTransactionRepository.save(otpTransaction);
-                    sendOtp(savedOtpTransaction);
+                    sendOtp(otpClient, savedOtpTransaction);
                     return savedOtpTransaction;
                 });
     }
 
-    private void sendOtp(OtpTransaction otpTransaction) {
-        OtpClient otpClient = Optional.ofNullable(otpClientMap.get(otpTransaction.deliveryMethod()))
-                .orElseThrow(() -> new UnsupportedDeliveryMethodException(otpTransaction.deliveryMethod()));
+    private void sendOtp(OtpClient otpClient, OtpTransaction otpTransaction) {
         otpClient.sendAsync(otpTransaction)
                 .thenAcceptAsync(_ -> otpTransactionRepository.save(otpTransaction.toBuilder()
                         .updatedAt(Instant.now())

@@ -74,10 +74,9 @@ class DefaultOtpTransactionServiceTest {
         otpService.generate(mockedCommand);
 
         ArgumentCaptor<OtpTransaction> otpArgumentCaptor = ArgumentCaptor.forClass(OtpTransaction.class);
-        verify(otpTransactionRepository, times(1)).save(otpArgumentCaptor.capture());
+        verify(otpTransactionRepository, times(2)).save(otpArgumentCaptor.capture());
         OtpTransaction otpTransactionArgumentCaptorValue = otpArgumentCaptor.getValue();
 
-        // Assertions for the Otp object
         assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "otpCode should match generated code");
         assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "recipient should match command");
         assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "purpose should match command");
@@ -149,15 +148,13 @@ class DefaultOtpTransactionServiceTest {
 
     @Test
     void generate_givenDeliveryMethodIsNotSupported_thenShouldThrowException() {
-        when(otpGenerator.generateCode(anyInt())).thenReturn("123456");
-
         assertThrows(UnsupportedDeliveryMethodException.class, () -> {
             otpService.generate(mockedCommand.toBuilder()
                     .deliveryMethod(DeliveryMethod.PUSH)
                     .build());
-        }, " Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
+        }, "Should throw UnsupportedDeliveryMethodException when delivery method is not supported");
 
-        verify(otpTransactionRepository, times(1)).retrieveByRecipient(mockedCommand.recipient());
+        verifyNoInteractions(otpTransactionRepository, otpGenerator, smsOtpClient);
         verify(otpClientMap, times(1)).get(DeliveryMethod.PUSH);
     }
 
