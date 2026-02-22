@@ -2,6 +2,7 @@ package com.fabiankevin.app.clients;
 
 import com.fabiankevin.app.exceptions.EmailNotificationException;
 import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.enums.DeliveryMethod;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +53,10 @@ public class EmailOtpClient implements OtpClient {
     @Override
     public CompletableFuture<Void> sendAsync(OtpTransaction otpTransaction) {
         return CompletableFuture.runAsync(() -> send(otpTransaction), executor);
+    }
+
+    @Override
+    public DeliveryMethod supports() {
+        return DeliveryMethod.EMAIL;
     }
 }

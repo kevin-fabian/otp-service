@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class EmailOtpTransactionClientTest {
@@ -46,6 +47,11 @@ class EmailOtpTransactionClientTest {
                 .attemptCount(0)
                 .metadata(null)
                 .build();
+    }
+
+    @Test
+    void supports_givenEmailDeliveryMethod_thenShouldReturnEmailDeliveryMethod() {
+        assertEquals(DeliveryMethod.EMAIL, emailOtpClient.supports());
     }
 
     @Test
