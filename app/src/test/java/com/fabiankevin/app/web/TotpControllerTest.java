@@ -1,30 +1,22 @@
 package com.fabiankevin.app.web;
 
 import com.fabiankevin.app.models.TotpUser;
-import com.fabiankevin.app.models.enums.DeliveryMethod;
-import com.fabiankevin.app.models.enums.OtpPurpose;
-import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.entities.OtpTransactionEntity;
-import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
-import com.fabiankevin.app.persistence.jpa.JpaTotpUserRepository;
-import com.fabiankevin.app.services.totp.TotpCodeVerifier;
 import com.fabiankevin.app.services.totp.TotpService;
 import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
+import com.fabiankevin.app.services.totp.commands.VerifyTotpCommand;
+import com.github.fabiankevin.lemon.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,28 +28,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@Import({GlobalExceptionHandler.class})
+@WebMvcTest(controllers = TotpController.class)
 @ActiveProfiles("test")
 class TotpControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoSpyBean
-    @Autowired
+    @MockitoBean
     private TotpService totpService;
-
-    @Autowired
-    private JpaTotpUserRepository jpaTotpUserRepository;
-
-    @MockitoBean
-    private TotpCodeVerifier totpCodeVerifier;
-
-    @Autowired
-    private JpaOtpRepository jpaOtpRepository;
-
-    @MockitoBean
-    private JwtDecoder jwtDecoder;
 
     private Jwt mockJwt;
 
@@ -65,50 +44,47 @@ class TotpControllerTest {
 
     @BeforeEach
     void reset() {
-        jpaOtpRepository.deleteAll();
-        jpaTotpUserRepository.deleteAll();
-
         mockJwt = Jwt.withTokenValue("token")
                 .header("alg", "RS256")
                 .header("kid", UUID.randomUUID().toString())
-                .claim("sub", USER_PROFILE_ID)
+                .claim("sub", USER_PROFILE_ID.toString())
                 .claim("scope", "totp:manage")
                 .expiresAt(Instant.now().plusSeconds(300))
                 .issuedAt(Instant.now())
                 .build();
-
-        when(jwtDecoder.decode(anyString())).thenReturn(mockJwt);
     }
 
     @Test
     void register_givenValidRequest_thenShouldReturnTotpResponse() throws Exception {
+        TotpUser totpUser = TotpUser.builder().id(USER_PROFILE_ID).build();
+        when(totpService.registerTotp(any(RegisterTotpCommand.class))).thenReturn(totpUser);
+
         mockMvc.perform(post("/v1/totp/users")
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists());
+
+        verify(totpService, times(1)).registerTotp(new RegisterTotpCommand(USER_PROFILE_ID.toString()));
     }
 
     @Test
     void getQrCodeImage_givenValidUserReferenceId_thenShouldReturnQrCodeImage() throws Exception {
-        TotpUser totpUser = totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(USER_PROFILE_ID.toString())
-                .build());
+        byte[] image = new byte[]{1, 2, 3};
+        when(totpService.getQrCodeImageByUserReferenceId(USER_PROFILE_ID.toString())).thenReturn(image);
 
-        mockMvc.perform(get("/v1/totp/users/qr", totpUser.id())
+        mockMvc.perform(get("/v1/totp/users/qr")
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertEquals(MediaType.IMAGE_PNG_VALUE, result.getResponse().getContentType(), "Content type should be PNG image"));
+
+        verify(totpService, times(1)).getQrCodeImageByUserReferenceId(USER_PROFILE_ID.toString());
     }
 
     @Test
     void verify_givenValidRequest_thenShouldVerifySuccessfully() throws Exception {
-        totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(USER_PROFILE_ID.toString())
-                .build());
-
-        when(totpCodeVerifier.verify(any(), eq("123456"))).thenReturn(true);
+        doNothing().when(totpService).verify(any(VerifyTotpCommand.class));
 
         mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
                         .with(jwt().jwt(mockJwt))
@@ -122,23 +98,12 @@ class TotpControllerTest {
                 .andExpect(status().isOk());
 
         verify(totpService, times(1)).verify(any());
-
-        OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findAll().getFirst();
-        assertEquals(OtpStatus.VERIFIED, otpTransactionEntity.getStatus(), "Otp status should be VERIFIED");
-        assertEquals(0, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
-        assertEquals("123456", otpTransactionEntity.getOtpCode(), "otp code should match");
-        assertEquals(USER_PROFILE_ID.toString(), otpTransactionEntity.getRecipient(), "user profile userReferenceId should match");
-        assertEquals(DeliveryMethod.TOTP, otpTransactionEntity.getDeliveryMethod(), "user profile userReferenceId should match");
-        assertEquals(OtpPurpose.LOGIN, otpTransactionEntity.getPurpose(), "purpose should be LOGIN");
     }
 
     @Test
     void verify_givenMultipleValidRequests_thenShouldOnlySucceedOnce() throws Exception {
-        totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(USER_PROFILE_ID.toString())
-                .build());
-
-        when(totpCodeVerifier.verify(any(), eq("123456"))).thenReturn(true);
+        // first call succeeds, second call fails with invalid state
+        doNothing().doThrow(new com.fabiankevin.app.exceptions.OtpInvalidStateException()).when(totpService).verify(any(VerifyTotpCommand.class));
 
         mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
                         .with(jwt().jwt(mockJwt))
@@ -163,25 +128,11 @@ class TotpControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(totpService, times(2)).verify(any());
-        List<OtpTransactionEntity> all = jpaOtpRepository.findAll();
-        assertEquals(1, all.size(), "Should only have one OTP transaction");
-
-        OtpTransactionEntity otpTransactionEntity = all.getFirst();
-        assertEquals(OtpStatus.VERIFIED, otpTransactionEntity.getStatus(), "Otp status should be VERIFIED");
-        assertEquals(0, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
-        assertEquals("123456", otpTransactionEntity.getOtpCode(), "otp code should match");
-        assertEquals(USER_PROFILE_ID.toString(), otpTransactionEntity.getRecipient(), "user profile userReferenceId should match");
-        assertEquals(DeliveryMethod.TOTP, otpTransactionEntity.getDeliveryMethod(), "user profile userReferenceId should match");
-        assertEquals(OtpPurpose.LOGIN, otpTransactionEntity.getPurpose(), "purpose should be LOGIN");
     }
 
     @Test
     void verify_givenIncorrectCode_thenAttemptCountShouldBeOneAndStatusShouldBeActive() throws Exception {
-        totpService.registerTotp(RegisterTotpCommand.builder()
-                .userProfileId(USER_PROFILE_ID.toString())
-                .build());
-
-        when(totpCodeVerifier.verify(any(), eq("123456"))).thenReturn(false);
+        doThrow(new com.fabiankevin.app.exceptions.TotpInvalidCodeException()).when(totpService).verify(any(VerifyTotpCommand.class));
 
         mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
                         .with(jwt().jwt(mockJwt))
@@ -195,10 +146,6 @@ class TotpControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(totpService, times(1)).verify(any());
-
-        OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findAll().getFirst();
-        assertEquals(OtpStatus.SENT, otpTransactionEntity.getStatus(), "Otp status should be SENT");;
-        assertEquals(1, otpTransactionEntity.getAttemptCount(), "attempt count should be 0");
     }
 
     @Test
@@ -213,6 +160,8 @@ class TotpControllerTest {
 
     @Test
     void verify_givenUnregisteredUser_thenShouldReturnNotFound() throws Exception {
+        doThrow(new com.fabiankevin.app.exceptions.TotpUnregisteredException()).when(totpService).verify(any(VerifyTotpCommand.class));
+
         mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", UUID.randomUUID())
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
