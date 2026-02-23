@@ -34,7 +34,7 @@ public class EmailOtpClient implements OtpClient {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             Context context = new Context();
-            context.setVariable("otpCode", otpTransaction.otpCode());
+            context.setVariable("code", otpTransaction.otpCode());
             context.setVariable("expirationMinutes", expirationMinutes);
             String htmlContent = templateEngine.process("otp-email-template", context);
 

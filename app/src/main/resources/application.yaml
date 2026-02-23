@@ -21,7 +21,10 @@ spring:
       resourceserver:
         jwt:
           jws-algorithms: RS256
-          audiences: otp-client
+          audiences:
+            - otp-client
+            - finance-tracker-app
+            - finance-tracker-web
 
 management:
   endpoints:

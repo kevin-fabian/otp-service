@@ -60,7 +60,7 @@ public class DefaultOtpService implements OtpService {
                             .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                             .build();
 
-                    OtpTransaction savedOtpTransaction = otpTransactionRepository.save(otpTransaction);
+                    OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(otpTransaction);
                     sendOtp(otpClient, savedOtpTransaction);
                     return savedOtpTransaction;
                 });
@@ -68,7 +68,7 @@ public class DefaultOtpService implements OtpService {
 
     private void sendOtp(OtpClient otpClient, OtpTransaction otpTransaction) {
         otpClient.sendAsync(otpTransaction)
-                .thenAcceptAsync(_ -> otpTransactionRepository.save(otpTransaction.toBuilder()
+                .thenRunAsync(() -> otpTransactionRepository.save(otpTransaction.toBuilder()
                         .updatedAt(Instant.now())
                         .status(SENT)
                         .build()));

@@ -4,7 +4,7 @@ import com.fabiankevin.app.services.otp.OtpService;
 import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 import com.fabiankevin.app.web.dtos.OtpRequest;
 import com.fabiankevin.app.web.dtos.OtpResponse;
-import com.fabiankevin.app.web.dtos.OtpVerificationRequest;
+import com.fabiankevin.app.web.dtos.VerifyOtpRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -54,12 +54,13 @@ public class OtpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verifyOtp(
-            @PathVariable UUID otpId,
+            @PathVariable
+            UUID otpId,
             @Parameter(description = "Otp verification request")
             @Valid
             @RequestBody
-            OtpVerificationRequest request) {
-        otpService.verify(new VerifyOtpCommand(otpId, request.otpCode()));
+            VerifyOtpRequest request) {
+        otpService.verify(new VerifyOtpCommand(otpId, request.code()));
     }
 
     @GetMapping("/{id}")
@@ -76,7 +77,7 @@ public class OtpController {
         return OtpResponse.from(otpService.retrieveById(id));
     }
 
-    @PatchMapping("/{id}/mark-as-used")
+    @PatchMapping("/{id}/use")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Patch OTP status as used",
             description = "Updates the OTP status to used.",
@@ -85,7 +86,7 @@ public class OtpController {
                     @ApiResponse(responseCode = "404", description = "Not Found - Otp not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
-    public void markOtpAsUsed(@PathVariable UUID id) {
+    public void useOtp(@PathVariable UUID id) {
         otpService.useOtp(id);
     }
 }

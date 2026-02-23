@@ -8,6 +8,10 @@ spring:
       hibernate:
         format_sql: true
 
-otel:
-  sdk:
-    disabled: true
+management:
+  tracing:
+    enabled: false
+  otlp:
+    metrics:
+      export:
+        enabled: false

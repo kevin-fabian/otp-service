@@ -29,7 +29,7 @@ public class OtpTransactionEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "otp_code", nullable = false)
+    @Column(name = "otp_code", columnDefinition = "VARCHAR(8)", nullable = false)
     private String otpCode;
 
     @Column(name = "recipient", nullable = false)

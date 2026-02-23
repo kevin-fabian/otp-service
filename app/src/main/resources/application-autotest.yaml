@@ -20,23 +20,15 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: http://localhost:9000/oauth2/jwks
-          audiences:
-            - downstream-client
   h2:
     console:
       enabled: true
       path: /h2-console
 
 management:
+  tracing:
+    enabled: false
   otlp:
-    tracing:
-      endpoint: http://localhost:4318
+    metrics:
       export:
         enabled: false
-  tracing:
-    sampling:
-      probability: 1.0
-
-otel:
-  sdk:
-    disabled: true

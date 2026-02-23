@@ -77,7 +77,7 @@ class DefaultOtpTransactionServiceTest {
         verify(otpTransactionRepository, times(2)).save(otpArgumentCaptor.capture());
         OtpTransaction otpTransactionArgumentCaptorValue = otpArgumentCaptor.getValue();
 
-        assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "otpCode should match generated code");
+        assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "code should match generated code");
         assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "recipient should match command");
         assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "purpose should match command");
         assertEquals(OtpStatus.SENT, otpTransactionArgumentCaptorValue.status(), "status should match be `SENT`");
@@ -110,7 +110,7 @@ class DefaultOtpTransactionServiceTest {
 
         OtpTransaction result = otpService.generate(mockedCommand);
 
-        assertEquals("123456", result.otpCode(), "otpCode should match generated code");
+        assertEquals("123456", result.otpCode(), "code should match generated code");
         assertEquals(otpTransaction.recipient(), result.recipient(), "recipient should match command");
         assertEquals(otpTransaction.purpose(), result.purpose(), "purpose should match command");
         assertEquals(otpTransaction.deliveryMethod(), result.deliveryMethod(), "deliveryMethod should match command");

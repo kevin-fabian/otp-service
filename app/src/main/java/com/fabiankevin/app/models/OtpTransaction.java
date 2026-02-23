@@ -28,7 +28,7 @@ public record OtpTransaction(
         String metadata
 ) {
     public OtpTransaction {
-        Objects.requireNonNull(otpCode, "otpCode must not be null");
+        Objects.requireNonNull(otpCode, "code must not be null");
         Objects.requireNonNull(recipient, "recipient must not be null");
         Objects.requireNonNull(purpose, "purpose must not be null");
         Objects.requireNonNull(status, "status must not be null");
@@ -36,7 +36,7 @@ public record OtpTransaction(
         Objects.requireNonNull(expiresAt, "expiresAt must not be null");
 
         if (otpCode.isBlank()) {
-            throw new IllegalArgumentException("otpCode must not be blank");
+            throw new IllegalArgumentException("code must not be blank");
         }
         if (recipient.isBlank()) {
             throw new IllegalArgumentException("recipient must not be blank");

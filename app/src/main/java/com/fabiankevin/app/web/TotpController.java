@@ -75,7 +75,6 @@ public class TotpController {
         totpService.verify(VerifyTotpCommand.builder()
                         .userReferenceId(userReferenceId)
                         .code(request.code())
-                        .purpose(request.purpose())
                 .build());
     }
 }

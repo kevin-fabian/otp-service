@@ -1,7 +1,6 @@
 package com.fabiankevin.app.config;
 
 import com.github.fabiankevin.lemon.web.dto.ApiErrorResponse;
-import com.github.fabiankevin.lemon.web.security.InvalidTokenAuthenticationEntryPoint;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -27,7 +27,10 @@ public class ResourceServerConfig {
     private final JsonMapper jsonMapper;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter, InvalidTokenAuthenticationEntryPoint invalidTokenAuthenticationEntryPoint) {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            JwtAuthenticationConverter jwtAuthenticationConverter,
+            AuthenticationEntryPoint defaultInvalidTokenAuthenticationEntryPoint) {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/v1/otps/**").hasAnyAuthority("SCOPE_otp:read", "SCOPE_otp:manage", "ROLE_USER", "ROLE_ADMIN")
@@ -49,7 +52,7 @@ public class ResourceServerConfig {
                                     errorResponse.setDetails("Insufficient permissions to access this resource");
                                     response.getWriter().write(jsonMapper.writeValueAsString(errorResponse));
                                 })
-                                .authenticationEntryPoint(invalidTokenAuthenticationEntryPoint));
+                                .authenticationEntryPoint(defaultInvalidTokenAuthenticationEntryPoint));
         return http.build();
     }
 

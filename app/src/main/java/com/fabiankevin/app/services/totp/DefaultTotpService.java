@@ -36,7 +36,7 @@ public class DefaultTotpService implements TotpService {
     @Transactional
     public TotpUser registerTotp(RegisterTotpCommand command) {
         totpUserRepository.findByUserReferenceId(command.userProfileId())
-                .ifPresent(totp -> {
+                .ifPresent(t_otp -> {
                     throw new TotpAlreadyRegisteredException();
                 });
 
