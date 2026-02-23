@@ -62,7 +62,7 @@ class DefaultOtpTransactionServiceTest {
     void generate_givenNewOtp_thenShouldSucceed() {
         when(otpTransactionRepository.retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT)))
                 .thenReturn(Optional.empty());
-        when(otpTransactionRepository.save(any())).thenAnswer(invocation -> {
+        when(otpTransactionRepository.saveAndFlush(any())).thenAnswer(invocation -> {
             OtpTransaction otpTransaction = invocation.getArgument(0);
             return otpTransaction.toBuilder()
                     .id(UUID.randomUUID())
@@ -74,13 +74,13 @@ class DefaultOtpTransactionServiceTest {
         otpService.generate(mockedCommand);
 
         ArgumentCaptor<OtpTransaction> otpArgumentCaptor = ArgumentCaptor.forClass(OtpTransaction.class);
-        verify(otpTransactionRepository, times(2)).save(otpArgumentCaptor.capture());
+        verify(otpTransactionRepository, times(1)).saveAndFlush(otpArgumentCaptor.capture());
         OtpTransaction otpTransactionArgumentCaptorValue = otpArgumentCaptor.getValue();
 
         assertEquals("123456", otpTransactionArgumentCaptorValue.otpCode(), "code should match generated code");
         assertEquals(mockedCommand.recipient(), otpTransactionArgumentCaptorValue.recipient(), "recipient should match command");
         assertEquals(mockedCommand.purpose(), otpTransactionArgumentCaptorValue.purpose(), "purpose should match command");
-        assertEquals(OtpStatus.SENT, otpTransactionArgumentCaptorValue.status(), "status should match be `SENT`");
+        assertEquals(NEW, otpTransactionArgumentCaptorValue.status(), "status should match be `SENT`");
         assertEquals(mockedCommand.deliveryMethod(), otpTransactionArgumentCaptorValue.deliveryMethod(), "deliveryMethod should match command");
         assertEquals(0, otpTransactionArgumentCaptorValue.attemptCount(), "attemptCount should be 0");
         assertNotNull(otpTransactionArgumentCaptorValue.createdAt(), "createdAt should not be null");
@@ -90,9 +90,10 @@ class DefaultOtpTransactionServiceTest {
                 otpTransactionArgumentCaptorValue.expiresAt().truncatedTo(ChronoUnit.SECONDS),
                 "expiresAt should be createdAt plus expiration minutes"
         );
-        assertNotNull(otpTransactionArgumentCaptorValue.id(), "id should not be null");
+        assertNull(otpTransactionArgumentCaptorValue.id(), "id shoul be null");
         assertEquals("{}", otpTransactionArgumentCaptorValue.metadata(), "metadata should match command");
 
+        verify(otpTransactionRepository, times(1)).save(argThat(OtpTransaction::isSent));
         verify(otpTransactionRepository, times(1)).retrieveByRecipientAndStatus(mockedCommand.recipient(), List.of(NEW, SENT));
         verify(otpClientMap, times(1)).get(DeliveryMethod.SMS);
         verify(smsOtpClient, times(1)).sendAsync(any());
