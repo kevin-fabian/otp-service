@@ -1,14 +1,14 @@
 package com.fabiankevin.app.config;
 
-import com.fabiankevin.app.clients.AutotestEmailOtpClient;
-import com.fabiankevin.app.clients.EmailOtpClient;
+import com.fabiankevin.app.clients.AutotestEmailNotificationClient;
+import com.fabiankevin.app.clients.EmailNotificationClient;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
 import com.fabiankevin.app.properties.OtpProperties;
-import com.fabiankevin.app.services.otp.AutotestOtpService;
-import com.fabiankevin.app.services.otp.DefaultOtpGenerator;
-import com.fabiankevin.app.services.otp.DefaultOtpService;
-import com.fabiankevin.app.services.otp.OtpService;
+import com.fabiankevin.app.services.otp.AutotestOneTimePasswordService;
+import com.fabiankevin.app.services.otp.DefaultOneTimePasswordGenerator;
+import com.fabiankevin.app.services.otp.DefaultOneTimePasswordService;
+import com.fabiankevin.app.services.otp.OneTimePasswordService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,27 +26,27 @@ public class AppConfig {
 
     @Bean
     @Profile("!autotest")
-    public OtpService defaultOtpService(OtpTransactionRepository otpTransactionRepository,
-                                        EmailOtpClient emailOtpClient,
-                                        OtpProperties otpProperties) {
-        return new DefaultOtpService(otpTransactionRepository,
+    public OneTimePasswordService defaultOtpService(OtpTransactionRepository otpTransactionRepository,
+                                                    EmailNotificationClient emailOtpClient,
+                                                    OtpProperties otpProperties) {
+        return new DefaultOneTimePasswordService(otpTransactionRepository,
                 Map.of(
                         DeliveryMethod.EMAIL, emailOtpClient
                 ),
-                new DefaultOtpGenerator(),
+                new DefaultOneTimePasswordGenerator(),
                 otpProperties);
     }
 
     @Bean
     @Profile("autotest")
-    public OtpService autotestOtpService(OtpTransactionRepository otpTransactionRepository,
-                                      AutotestEmailOtpClient emailOtpClient,
-                                      OtpProperties otpProperties) {
-        return new AutotestOtpService(otpTransactionRepository,
+    public OneTimePasswordService autotestOtpService(OtpTransactionRepository otpTransactionRepository,
+                                                     AutotestEmailNotificationClient emailOtpClient,
+                                                     OtpProperties otpProperties) {
+        return new AutotestOneTimePasswordService(otpTransactionRepository,
                 Map.of(
                         DeliveryMethod.EMAIL, emailOtpClient
                 ),
-                new DefaultOtpGenerator(),
+                new DefaultOneTimePasswordGenerator(),
                 otpProperties);
     }
 }

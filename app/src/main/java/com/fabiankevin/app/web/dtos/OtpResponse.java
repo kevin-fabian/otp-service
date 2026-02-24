@@ -1,6 +1,6 @@
 package com.fabiankevin.app.web.dtos;
 
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -24,17 +24,17 @@ public record OtpResponse(
         @Schema(description = "Date and time when OTP will expire", example = "2024-03-01T12:00:00.000+00:00")
         OffsetDateTime expiredAt) {
 
-    public static OtpResponse from(OtpTransaction otpTransaction) {
+    public static OtpResponse from(OneTimePasswordTransaction oneTimePasswordTransaction) {
         return OtpResponse.builder()
-                .id(otpTransaction.id())
-                .recipient(otpTransaction.recipient())
-                .purpose(otpTransaction.purpose())
-                .status(otpTransaction.status())
-                .deliveryMethod(otpTransaction.deliveryMethod())
-                .createdAt(otpTransaction.createdAt())
-                .updatedAt(otpTransaction.updatedAt())
-                .expiredAt(otpTransaction.expiresAt())
-                .metadata(otpTransaction.metadata())
+                .id(oneTimePasswordTransaction.id())
+                .recipient(oneTimePasswordTransaction.recipient())
+                .purpose(oneTimePasswordTransaction.purpose())
+                .status(oneTimePasswordTransaction.status())
+                .deliveryMethod(oneTimePasswordTransaction.deliveryMethod())
+                .createdAt(oneTimePasswordTransaction.createdAt())
+                .updatedAt(oneTimePasswordTransaction.updatedAt())
+                .expiredAt(oneTimePasswordTransaction.expiresAt())
+                .metadata(oneTimePasswordTransaction.metadata())
                 .build();
     }
 }

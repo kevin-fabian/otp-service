@@ -3,11 +3,11 @@ package com.fabiankevin.app.web;
 import com.fabiankevin.app.exceptions.InvalidOtpException;
 import com.fabiankevin.app.exceptions.OtpInvalidStateException;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.services.otp.OtpService;
+import com.fabiankevin.app.services.otp.OneTimePasswordService;
 import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 import com.github.fabiankevin.lemon.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,22 +36,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import({GlobalExceptionHandler.class})
-@WebMvcTest(controllers = OtpController.class)
+@WebMvcTest(controllers = OneTimePasswordController.class)
 @ActiveProfiles("test")
-class OtpTransactionControllerTest {
+class OneTimePasswordTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OtpService otpService;
+    private OneTimePasswordService oneTimePasswordService;
 
-    private OtpTransaction mockedOtpTransaction;
+    private OneTimePasswordTransaction mockedOneTimePasswordTransaction;
     private Jwt mockJwt;
 
     @BeforeEach
     void setup() {
         OffsetDateTime now = OffsetDateTime.now();
-        mockedOtpTransaction = OtpTransaction.builder()
+        mockedOneTimePasswordTransaction = OneTimePasswordTransaction.builder()
                 .id(UUID.randomUUID())
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.EMAIL)
@@ -78,7 +78,7 @@ class OtpTransactionControllerTest {
 
     @Test
     void generateOtp_givenValidRequest_thenShouldReturnOtpCode() throws Exception {
-        when(otpService.generate(any())).thenReturn(mockedOtpTransaction);
+        when(oneTimePasswordService.generate(any())).thenReturn(mockedOneTimePasswordTransaction);
         mockMvc.perform(post("/v1/otps")
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -101,7 +101,7 @@ class OtpTransactionControllerTest {
                 .andExpect(jsonPath("$.updatedAt").exists())
                 .andExpect(jsonPath("$.expiredAt").exists());
 
-        verify(otpService, times(1)).generate(any());
+        verify(oneTimePasswordService, times(1)).generate(any());
     }
 
    @Test
@@ -121,7 +121,7 @@ class OtpTransactionControllerTest {
                 .andExpect(jsonPath("$.title").value("Invalid request body"))
                 .andExpect(jsonPath("$.details").value("The request body is not properly formatted or contains invalid JSON"));
 
-        verify(otpService, never()).generate(any());
+        verify(oneTimePasswordService, never()).generate(any());
     }
 
     @Test
@@ -141,7 +141,7 @@ class OtpTransactionControllerTest {
                 .andExpect(jsonPath("$.title").value("Invalid request body"))
                 .andExpect(jsonPath("$.details").value("The request body is not properly formatted or contains invalid JSON"));
 
-        verify(otpService, never()).generate(any());
+        verify(oneTimePasswordService, never()).generate(any());
     }
 
     @Test
@@ -160,7 +160,7 @@ class OtpTransactionControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Invalid request parameters"));
 
-        verify(otpService, never()).generate(any());
+        verify(oneTimePasswordService, never()).generate(any());
     }
 
 
@@ -169,7 +169,7 @@ class OtpTransactionControllerTest {
         UUID otpId = UUID.randomUUID();
         String otpCode = "123456";
         VerifyOtpCommand verifyOtpCommand = new VerifyOtpCommand(otpId, otpCode);
-        doNothing().when(otpService).verify(verifyOtpCommand);
+        doNothing().when(oneTimePasswordService).verify(verifyOtpCommand);
 
         mockMvc.perform(post("/v1/otps/{otp}/verify", otpId)
                         .with(jwt().jwt(mockJwt))
@@ -181,7 +181,7 @@ class OtpTransactionControllerTest {
                                 """.replace("{{otp_code}}", otpCode)))
                  .andExpect(status().isNoContent());
 
-        verify(otpService, times(1)).verify(verifyOtpCommand);
+        verify(oneTimePasswordService, times(1)).verify(verifyOtpCommand);
     }
 
     @ParameterizedTest
@@ -189,7 +189,7 @@ class OtpTransactionControllerTest {
     void verifyOtp_givenInvalidOtpCode_thenShouldReturnBadRequest(String invalidOtpCode) throws Exception {
         UUID otpId = UUID.randomUUID();
         doThrow(InvalidOtpException.class)
-                .when(otpService).verify(new VerifyOtpCommand(otpId, invalidOtpCode));
+                .when(oneTimePasswordService).verify(new VerifyOtpCommand(otpId, invalidOtpCode));
 
         mockMvc.perform(post("/v1/otps/{id}/verify", otpId)
                         .with(jwt().jwt(mockJwt))
@@ -206,7 +206,7 @@ class OtpTransactionControllerTest {
     @Test
     void verifyOtp_givenOtpNotFound_thenShouldReturnNotFound() throws Exception {
         doThrow(new OtpNotFoundException())
-                .when(otpService).verify(any());
+                .when(oneTimePasswordService).verify(any());
 
         mockMvc.perform(post("/v1/otps/{id}/verify", UUID.randomUUID())
                         .with(jwt().jwt(mockJwt))
@@ -224,28 +224,28 @@ class OtpTransactionControllerTest {
 
     @Test
     void retrieveById_givenValidId_thenShouldReturnOtpDetails() throws Exception {
-        UUID otpId = mockedOtpTransaction.id();
-        when(otpService.retrieveById(otpId)).thenReturn(mockedOtpTransaction);
+        UUID otpId = mockedOneTimePasswordTransaction.id();
+        when(oneTimePasswordService.retrieveById(otpId)).thenReturn(mockedOneTimePasswordTransaction);
         mockMvc.perform(get("/v1/otps/{id}", otpId)
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(otpId.toString()))
-                .andExpect(jsonPath("$.recipient").value(mockedOtpTransaction.recipient()))
-                .andExpect(jsonPath("$.purpose").value(mockedOtpTransaction.purpose().name()))
-                .andExpect(jsonPath("$.deliveryMethod").value(mockedOtpTransaction.deliveryMethod().name()))
-                .andExpect(jsonPath("$.status").value(mockedOtpTransaction.status().name()))
+                .andExpect(jsonPath("$.recipient").value(mockedOneTimePasswordTransaction.recipient()))
+                .andExpect(jsonPath("$.purpose").value(mockedOneTimePasswordTransaction.purpose().name()))
+                .andExpect(jsonPath("$.deliveryMethod").value(mockedOneTimePasswordTransaction.deliveryMethod().name()))
+                .andExpect(jsonPath("$.status").value(mockedOneTimePasswordTransaction.status().name()))
                 .andExpect(jsonPath("$.updatedAt").exists())
                 .andExpect(jsonPath("$.createdAt").exists())
                 .andExpect(jsonPath("$.expiredAt").exists());
 
-        verify(otpService, times(1)).retrieveById(otpId);
+        verify(oneTimePasswordService, times(1)).retrieveById(otpId);
     }
 
     @Test
     void retrieveById_givenNotFoundOtp_thenShouldReturnNotFound() throws Exception {
         UUID invalidId = UUID.randomUUID();
-        when(otpService.retrieveById(invalidId)).thenThrow(new OtpNotFoundException());
+        when(oneTimePasswordService.retrieveById(invalidId)).thenThrow(new OtpNotFoundException());
 
         mockMvc.perform(get("/v1/otps/{id}", invalidId)
                         .with(jwt().jwt(mockJwt))
@@ -255,7 +255,7 @@ class OtpTransactionControllerTest {
                 .andExpect(jsonPath("$.details").value("Otp not found"))
                 .andExpect(jsonPath("$.code").value("AUTH_OTP_404"));
 
-        verify(otpService, times(1)).retrieveById(invalidId);
+        verify(oneTimePasswordService, times(1)).retrieveById(invalidId);
     }
 
     @Test
@@ -267,26 +267,26 @@ class OtpTransactionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(otpService, times(1)).useOtp(otpId);
+        verify(oneTimePasswordService, times(1)).useOtp(otpId);
     }
 
     @Test
     void useOtp_givenOtpIsNotVerified_thenShouldBeBadRequest() throws Exception {
         UUID otpId = UUID.randomUUID();
-        doThrow(new OtpInvalidStateException()).when(otpService).useOtp(otpId);
+        doThrow(new OtpInvalidStateException()).when(oneTimePasswordService).useOtp(otpId);
 
         mockMvc.perform(patch("/v1/otps/{id}/use", otpId)
                         .with(jwt().jwt(mockJwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(otpService, times(1)).useOtp(otpId);
+        verify(oneTimePasswordService, times(1)).useOtp(otpId);
     }
 
     @Test
     void useOtp_givenInvalidId_thenShouldReturnNotFound() throws Exception {
         UUID invalidId = UUID.randomUUID();
-        doThrow(new OtpNotFoundException()).when(otpService).useOtp(invalidId);
+        doThrow(new OtpNotFoundException()).when(oneTimePasswordService).useOtp(invalidId);
 
         mockMvc.perform(patch("/v1/otps/{id}/use", invalidId)
                         .with(jwt().jwt(mockJwt))

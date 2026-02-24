@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.Random;
 
 @Component
-public class DefaultOtpGenerator implements OtpGenerator {
+public class DefaultOneTimePasswordGenerator implements OneTimePasswordGenerator {
     private final Random random = new Random();
     @Override
     public String generateCode(int digits) {

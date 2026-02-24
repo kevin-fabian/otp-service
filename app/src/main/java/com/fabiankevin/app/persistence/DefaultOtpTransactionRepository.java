@@ -1,9 +1,9 @@
 package com.fabiankevin.app.persistence;
 
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.entities.OtpTransactionEntity;
-import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
+import com.fabiankevin.app.persistence.entities.OneTimePasswordTransactionEntity;
+import com.fabiankevin.app.persistence.jpa.JpaOneTimePasswordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -14,33 +14,33 @@ import java.util.UUID;
 @Repository
 @RequiredArgsConstructor
 public class DefaultOtpTransactionRepository implements OtpTransactionRepository {
-    private final JpaOtpRepository jpaOtpRepository;
+    private final JpaOneTimePasswordRepository jpaOneTimePasswordRepository;
 
     @Override
-    public OtpTransaction saveAndFlush(OtpTransaction otpTransaction) {
-        return jpaOtpRepository.saveAndFlush(OtpTransactionEntity.fromModel(otpTransaction)).toModel();
+    public OneTimePasswordTransaction saveAndFlush(OneTimePasswordTransaction oneTimePasswordTransaction) {
+        return jpaOneTimePasswordRepository.saveAndFlush(OneTimePasswordTransactionEntity.fromModel(oneTimePasswordTransaction)).toModel();
     }
 
     @Override
-    public OtpTransaction save(OtpTransaction otpTransaction) {
-        return jpaOtpRepository.save(OtpTransactionEntity.fromModel(otpTransaction)).toModel();
+    public OneTimePasswordTransaction save(OneTimePasswordTransaction oneTimePasswordTransaction) {
+        return jpaOneTimePasswordRepository.save(OneTimePasswordTransactionEntity.fromModel(oneTimePasswordTransaction)).toModel();
     }
 
     @Override
-    public Optional<OtpTransaction> retrieveById(UUID id) {
-        return jpaOtpRepository.findById(id)
-                .map(OtpTransactionEntity::toModel);
+    public Optional<OneTimePasswordTransaction> retrieveById(UUID id) {
+        return jpaOneTimePasswordRepository.findById(id)
+                .map(OneTimePasswordTransactionEntity::toModel);
     }
 
     @Override
-    public Optional<OtpTransaction> retrieveByRecipient(String recipient) {
-        return jpaOtpRepository.findByRecipientAndStatus(recipient, OtpStatus.VERIFIED)
-                .map(OtpTransactionEntity::toModel);
+    public Optional<OneTimePasswordTransaction> retrieveByRecipient(String recipient) {
+        return jpaOneTimePasswordRepository.findByRecipientAndStatus(recipient, OtpStatus.VERIFIED)
+                .map(OneTimePasswordTransactionEntity::toModel);
     }
 
     @Override
-    public Optional<OtpTransaction> retrieveByRecipientAndStatus(String recipient, List<OtpStatus> otpStatuses) {
-        return jpaOtpRepository.findByRecipientAndStatusIn(recipient, otpStatuses)
-                .map(OtpTransactionEntity::toModel);
+    public Optional<OneTimePasswordTransaction> retrieveByRecipientAndStatus(String recipient, List<OtpStatus> otpStatuses) {
+        return jpaOneTimePasswordRepository.findByRecipientAndStatusIn(recipient, otpStatuses)
+                .map(OneTimePasswordTransactionEntity::toModel);
     }
 }

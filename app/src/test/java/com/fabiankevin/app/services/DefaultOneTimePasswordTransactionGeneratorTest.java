@@ -1,7 +1,7 @@
 package com.fabiankevin.app.services;
 
-import com.fabiankevin.app.services.otp.DefaultOtpGenerator;
-import com.fabiankevin.app.services.otp.OtpGenerator;
+import com.fabiankevin.app.services.otp.DefaultOneTimePasswordGenerator;
+import com.fabiankevin.app.services.otp.OneTimePasswordGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -9,9 +9,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class DefaultOtpTransactionGeneratorTest {
+class DefaultOneTimePasswordTransactionGeneratorTest {
 
-    private final OtpGenerator generator = new DefaultOtpGenerator();
+    private final OneTimePasswordGenerator generator = new DefaultOneTimePasswordGenerator();
 
     @ParameterizedTest
     @ValueSource(ints = {1, 2, 4, 6})

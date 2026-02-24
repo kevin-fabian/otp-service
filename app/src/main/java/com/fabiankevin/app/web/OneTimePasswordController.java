@@ -1,6 +1,6 @@
 package com.fabiankevin.app.web;
 
-import com.fabiankevin.app.services.otp.OtpService;
+import com.fabiankevin.app.services.otp.OneTimePasswordService;
 import com.fabiankevin.app.services.otp.commands.VerifyOtpCommand;
 import com.fabiankevin.app.web.dtos.OtpRequest;
 import com.fabiankevin.app.web.dtos.OtpResponse;
@@ -20,8 +20,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/otps")
 @RequiredArgsConstructor
-public class OtpController {
-    private final OtpService otpService;
+public class OneTimePasswordController {
+    private final OneTimePasswordService oneTimePasswordService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
@@ -39,7 +39,7 @@ public class OtpController {
             @Valid
             @RequestBody
             OtpRequest otpRequest) {
-        return OtpResponse.from(otpService.generate(otpRequest.toCommand()));
+        return OtpResponse.from(oneTimePasswordService.generate(otpRequest.toCommand()));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -60,7 +60,7 @@ public class OtpController {
             @Valid
             @RequestBody
             VerifyOtpRequest request) {
-        otpService.verify(new VerifyOtpCommand(otpId, request.code()));
+        oneTimePasswordService.verify(new VerifyOtpCommand(otpId, request.code()));
     }
 
     @GetMapping("/{id}")
@@ -74,7 +74,7 @@ public class OtpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public OtpResponse retrieveById(@PathVariable UUID id) {
-        return OtpResponse.from(otpService.retrieveById(id));
+        return OtpResponse.from(oneTimePasswordService.retrieveById(id));
     }
 
     @PatchMapping("/{id}/use")
@@ -87,6 +87,6 @@ public class OtpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void useOtp(@PathVariable UUID id) {
-        otpService.useOtp(id);
+        oneTimePasswordService.useOtp(id);
     }
 }

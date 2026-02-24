@@ -1,7 +1,7 @@
 package com.fabiankevin.app.clients;
 
 import com.fabiankevin.app.exceptions.EmailNotificationException;
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -25,16 +25,16 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOf
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class EmailOtpTransactionClientTest {
+class EmailOneTimePasswordTransactionClientTest {
     private final JavaMailSender mailSender = mock(JavaMailSender.class);
     private final TemplateEngine templateEngine = mock(TemplateEngine.class);
     private final Executor executor = mock(Executor.class);
-    private final OtpClient emailOtpClient = new EmailOtpClient(mailSender, templateEngine, "OTP", 10, executor);
-    private OtpTransaction mockedOtpTransaction;
+    private final NotificationClient emailNotificationClient = new EmailNotificationClient(mailSender, templateEngine, "OTP", 10, executor);
+    private OneTimePasswordTransaction mockedOneTimePasswordTransaction;
 
     @BeforeEach
     void setup() {
-        mockedOtpTransaction = OtpTransaction.builder()
+        mockedOneTimePasswordTransaction = OneTimePasswordTransaction.builder()
                 .id(UUID.randomUUID())
                 .otpCode("123456")
                 .recipient("test@example.com")
@@ -51,7 +51,7 @@ class EmailOtpTransactionClientTest {
 
     @Test
     void supports_givenEmailDeliveryMethod_thenShouldReturnEmailDeliveryMethod() {
-        assertEquals(DeliveryMethod.EMAIL, emailOtpClient.supports());
+        assertEquals(DeliveryMethod.EMAIL, emailNotificationClient.supports());
     }
 
     @Test
@@ -60,7 +60,7 @@ class EmailOtpTransactionClientTest {
         when(templateEngine.process(eq("otp-email-template"), any(Context.class))).thenReturn("<html>OTP Email</html>");
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
-        emailOtpClient.send(mockedOtpTransaction);
+        emailNotificationClient.send(mockedOneTimePasswordTransaction);
 
         verify(mailSender, times(1)).send(mimeMessage);
         verify(templateEngine, times(1)).process(eq("otp-email-template"), any(Context.class));
@@ -75,7 +75,7 @@ class EmailOtpTransactionClientTest {
         doThrow(new MailSendException("test")).when(mailSender).send(any(MimeMessage.class));
 
         assertThatExceptionOfType(EmailNotificationException.class)
-                .isThrownBy(() -> emailOtpClient.send(mockedOtpTransaction))
+                .isThrownBy(() -> emailNotificationClient.send(mockedOneTimePasswordTransaction))
                 .withMessageContaining("test@example.com");
 
         verify(mailSender, times(1)).send(mimeMessage);
@@ -92,7 +92,7 @@ class EmailOtpTransactionClientTest {
         doThrow(MessagingException.class).when(mimeMessageHelper).setTo(anyString());
 
         assertThatExceptionOfType(EmailNotificationException.class)
-                .isThrownBy(() -> emailOtpClient.send(mockedOtpTransaction))
+                .isThrownBy(() -> emailNotificationClient.send(mockedOneTimePasswordTransaction))
                 .withMessageContaining("test@example.com");
 
         verify(templateEngine, times(1)).process(eq("otp-email-template"), any(Context.class));

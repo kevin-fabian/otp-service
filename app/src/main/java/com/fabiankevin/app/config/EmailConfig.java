@@ -1,6 +1,6 @@
 package com.fabiankevin.app.config;
 
-import com.fabiankevin.app.clients.EmailOtpClient;
+import com.fabiankevin.app.clients.EmailNotificationClient;
 import com.fabiankevin.app.properties.OtpProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +15,8 @@ public class EmailConfig {
 
     @Bean
     @Profile("!autotest") // Exclude this bean in local profile
-    public EmailOtpClient emailOtpClient(JavaMailSender javaMailSender, TemplateEngine templateEngine,
-                                         OtpProperties otpProperties, Executor virtualThreadExecutor){
-        return new EmailOtpClient(javaMailSender, templateEngine, "OTP", otpProperties.getExpirationMinutes(), virtualThreadExecutor);
+    public EmailNotificationClient emailOtpClient(JavaMailSender javaMailSender, TemplateEngine templateEngine,
+                                                  OtpProperties otpProperties, Executor virtualThreadExecutor){
+        return new EmailNotificationClient(javaMailSender, templateEngine, "OTP", otpProperties.getExpirationMinutes(), virtualThreadExecutor);
     }
 }

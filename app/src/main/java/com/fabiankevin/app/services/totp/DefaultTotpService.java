@@ -1,7 +1,7 @@
 package com.fabiankevin.app.services.totp;
 
 import com.fabiankevin.app.exceptions.*;
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -76,10 +76,10 @@ public class DefaultTotpService implements TotpService {
 
         Instant now = Instant.now();
 
-        OtpTransaction otpTransaction = otpTransactionRepository.retrieveByRecipientAndStatus(
+        OneTimePasswordTransaction oneTimePasswordTransaction = otpTransactionRepository.retrieveByRecipientAndStatus(
                         totpUser.userReferenceId(),
                         List.of(OtpStatus.VERIFIED))
-                .orElse(OtpTransaction.builder()
+                .orElse(OneTimePasswordTransaction.builder()
                         .recipient(totpUser.userReferenceId())
                         .otpCode(code)
                         .purpose(command.purpose())
@@ -91,23 +91,23 @@ public class DefaultTotpService implements TotpService {
                         .attemptCount(0)
                         .build());
 
-        if(OtpStatus.VERIFIED.equals(otpTransaction.status())){
+        if(OtpStatus.VERIFIED.equals(oneTimePasswordTransaction.status())){
             throw new OtpInvalidStateException();
         }
 
-        if (otpTransaction.attemptCount() >= DEFAULT_TOTP_MAX_ATTEMPTS) {
+        if (oneTimePasswordTransaction.attemptCount() >= DEFAULT_TOTP_MAX_ATTEMPTS) {
             throw new OtpAttemptLimitExceededException();
         }
 
         if (!totpCodeVerifier.verify(totpUser.secret(), code)) {
-            otpTransactionRepository.save(otpTransaction.toBuilder()
-                    .attemptCount(otpTransaction.attemptCount() + 1)
+            otpTransactionRepository.save(oneTimePasswordTransaction.toBuilder()
+                    .attemptCount(oneTimePasswordTransaction.attemptCount() + 1)
                     .updatedAt(now)
                     .build());
             throw new TotpInvalidCodeException();
         }
 
-        otpTransactionRepository.save(otpTransaction.toBuilder()
+        otpTransactionRepository.save(oneTimePasswordTransaction.toBuilder()
                 .status(OtpStatus.VERIFIED)
                 .otpCode(code)
                 .updatedAt(now)

@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Builder(toBuilder = true)
 @With
-public record OtpTransaction(
+public record OneTimePasswordTransaction(
         UUID id,
         String otpCode,
         String recipient,
@@ -27,7 +27,7 @@ public record OtpTransaction(
         int attemptCount,
         String metadata
 ) {
-    public OtpTransaction {
+    public OneTimePasswordTransaction {
         Objects.requireNonNull(otpCode, "code must not be null");
         Objects.requireNonNull(recipient, "recipient must not be null");
         Objects.requireNonNull(purpose, "purpose must not be null");

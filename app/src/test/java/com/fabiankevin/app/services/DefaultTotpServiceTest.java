@@ -1,7 +1,7 @@
 package com.fabiankevin.app.services;
 
 import com.fabiankevin.app.exceptions.*;
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -177,7 +177,7 @@ class DefaultTotpServiceTest {
         when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
         when(otpTransactionRepository.retrieveByRecipientAndStatus(any(), any()))
-                .thenReturn(Optional.of(OtpTransaction.builder()
+                .thenReturn(Optional.of(OneTimePasswordTransaction.builder()
                         .status(OtpStatus.VERIFIED)
                         .otpCode("123456")
                         .purpose(OtpPurpose.TRANSACTION)
@@ -218,7 +218,7 @@ class DefaultTotpServiceTest {
         when(totpUserRepository.findByUserReferenceId(any())).thenReturn(Optional.of(totpUser));
         when(totpCodeVerifier.verify(secret, totpCode)).thenReturn(true);
         when(otpTransactionRepository.retrieveByRecipientAndStatus(any(), any()))
-                .thenReturn(Optional.of(OtpTransaction.builder()
+                .thenReturn(Optional.of(OneTimePasswordTransaction.builder()
                         .status(OtpStatus.SENT)
                         .otpCode("123456")
                         .purpose(OtpPurpose.TRANSACTION)

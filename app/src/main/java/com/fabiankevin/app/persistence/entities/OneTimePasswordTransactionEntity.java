@@ -1,6 +1,6 @@
 package com.fabiankevin.app.persistence.entities;
 
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
@@ -23,7 +23,7 @@ import java.util.UUID;
         @Index(name = "otp_transactions_otp_code_idx", columnList = "otp_code"),
         @Index(name = "otp_transactions_recipient_idx", columnList = "recipient")
 })
-public class OtpTransactionEntity {
+public class OneTimePasswordTransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
@@ -62,8 +62,8 @@ public class OtpTransactionEntity {
     @Column(name = "metadata")
     private String metadata;
 
-    public OtpTransaction toModel() {
-        return OtpTransaction.builder()
+    public OneTimePasswordTransaction toModel() {
+        return OneTimePasswordTransaction.builder()
                 .id(id)
                 .otpCode(otpCode)
                 .recipient(recipient)
@@ -78,19 +78,19 @@ public class OtpTransactionEntity {
                 .build();
     }
 
-    public static OtpTransactionEntity fromModel(OtpTransaction otpTransaction) {
-        OtpTransactionEntity entity = new OtpTransactionEntity();
-        entity.setId(otpTransaction.id());
-        entity.setOtpCode(otpTransaction.otpCode());
-        entity.setRecipient(otpTransaction.recipient());
-        entity.setPurpose(otpTransaction.purpose());
-        entity.setStatus(otpTransaction.status());
-        entity.setCreatedAt(otpTransaction.createdAt());
-        entity.setExpiresAt(otpTransaction.expiresAt());
-        entity.setUpdatedAt(otpTransaction.updatedAt());
-        entity.setDeliveryMethod(otpTransaction.deliveryMethod());
-        entity.setAttemptCount(otpTransaction.attemptCount());
-        entity.setMetadata(otpTransaction.metadata());
+    public static OneTimePasswordTransactionEntity fromModel(OneTimePasswordTransaction oneTimePasswordTransaction) {
+        OneTimePasswordTransactionEntity entity = new OneTimePasswordTransactionEntity();
+        entity.setId(oneTimePasswordTransaction.id());
+        entity.setOtpCode(oneTimePasswordTransaction.otpCode());
+        entity.setRecipient(oneTimePasswordTransaction.recipient());
+        entity.setPurpose(oneTimePasswordTransaction.purpose());
+        entity.setStatus(oneTimePasswordTransaction.status());
+        entity.setCreatedAt(oneTimePasswordTransaction.createdAt());
+        entity.setExpiresAt(oneTimePasswordTransaction.expiresAt());
+        entity.setUpdatedAt(oneTimePasswordTransaction.updatedAt());
+        entity.setDeliveryMethod(oneTimePasswordTransaction.deliveryMethod());
+        entity.setAttemptCount(oneTimePasswordTransaction.attemptCount());
+        entity.setMetadata(oneTimePasswordTransaction.metadata());
         return entity;
     }
 }

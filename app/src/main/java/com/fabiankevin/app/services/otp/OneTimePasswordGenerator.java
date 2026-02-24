@@ -1,5 +1,5 @@
 package com.fabiankevin.app.services.otp;
 
-public interface OtpGenerator {
+public interface OneTimePasswordGenerator {
     String generateCode(int digit);
 }

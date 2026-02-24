@@ -1,8 +1,8 @@
 package com.fabiankevin.app.services.otp;
 
-import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.clients.NotificationClient;
 import com.fabiankevin.app.exceptions.*;
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpStatus;
 import com.fabiankevin.app.persistence.OtpTransactionRepository;
@@ -25,29 +25,29 @@ import static com.fabiankevin.app.models.enums.OtpStatus.SENT;
 
 @RequiredArgsConstructor
 @Slf4j
-public class DefaultOtpService implements OtpService {
+public class DefaultOneTimePasswordService implements OneTimePasswordService {
     private final OtpTransactionRepository otpTransactionRepository;
-    private final Map<DeliveryMethod, OtpClient> otpClientMap;
-    private final OtpGenerator otpGenerator;
+    private final Map<DeliveryMethod, NotificationClient> otpClientMap;
+    private final OneTimePasswordGenerator oneTimePasswordGenerator;
     private final OtpProperties properties;
 
     @Override
     @Transactional
-    public OtpTransaction generate(GenerateOtpCommand command) {
-        OtpClient otpClient = Optional.ofNullable(otpClientMap.get(command.deliveryMethod()))
+    public OneTimePasswordTransaction generate(GenerateOtpCommand command) {
+        NotificationClient notificationClient = Optional.ofNullable(otpClientMap.get(command.deliveryMethod()))
                 .orElseThrow(() -> new UnsupportedDeliveryMethodException(command.deliveryMethod()));
         return otpTransactionRepository.retrieveByRecipientAndStatus(command.recipient(), List.of(NEW, SENT))
                 .map(otpTransaction -> {
                     if( otpTransaction.isNew() ){
-                        sendOtp(otpClient, otpTransaction);
+                        sendOtp(notificationClient, otpTransaction);
                     }
 
                     return otpTransaction;
                 })
                 .orElseGet(() -> {
                     OffsetDateTime now = OffsetDateTime.now();
-                    String otpCode = otpGenerator.generateCode(properties.getCodeLength());
-                    OtpTransaction otpTransaction = OtpTransaction.builder()
+                    String otpCode = oneTimePasswordGenerator.generateCode(properties.getCodeLength());
+                    OneTimePasswordTransaction oneTimePasswordTransaction = OneTimePasswordTransaction.builder()
                             .deliveryMethod(command.deliveryMethod())
                             .purpose(command.purpose())
                             .recipient(command.recipient())
@@ -60,15 +60,15 @@ public class DefaultOtpService implements OtpService {
                             .expiresAt(now.plusMinutes(properties.getExpirationMinutes()))
                             .build();
 
-                    OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(otpTransaction);
-                    sendOtp(otpClient, savedOtpTransaction);
-                    return savedOtpTransaction;
+                    OneTimePasswordTransaction savedOneTimePasswordTransaction = otpTransactionRepository.saveAndFlush(oneTimePasswordTransaction);
+                    sendOtp(notificationClient, savedOneTimePasswordTransaction);
+                    return savedOneTimePasswordTransaction;
                 });
     }
 
-    private void sendOtp(OtpClient otpClient, OtpTransaction otpTransaction) {
-        otpClient.sendAsync(otpTransaction)
-                .thenRunAsync(() -> otpTransactionRepository.save(otpTransaction.toBuilder()
+    private void sendOtp(NotificationClient notificationClient, OneTimePasswordTransaction oneTimePasswordTransaction) {
+        notificationClient.sendAsync(oneTimePasswordTransaction)
+                .thenRunAsync(() -> otpTransactionRepository.save(oneTimePasswordTransaction.toBuilder()
                         .updatedAt(Instant.now())
                         .status(SENT)
                         .build()));
@@ -111,7 +111,7 @@ public class DefaultOtpService implements OtpService {
     }
 
     @Override
-    public OtpTransaction retrieveById(UUID otpId) {
+    public OneTimePasswordTransaction retrieveById(UUID otpId) {
         return otpTransactionRepository.retrieveById(otpId)
                 .orElseThrow(OtpNotFoundException::new);
     }

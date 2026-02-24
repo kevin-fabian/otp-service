@@ -1,7 +1,7 @@
 package com.fabiankevin.app.clients;
 
 import com.fabiankevin.app.exceptions.EmailNotificationException;
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -19,7 +19,7 @@ import java.util.concurrent.Executor;
 
 @Slf4j
 @RequiredArgsConstructor
-public class EmailOtpClient implements OtpClient {
+public class EmailNotificationClient implements NotificationClient {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final String subject;
@@ -27,14 +27,14 @@ public class EmailOtpClient implements OtpClient {
     private final Executor executor;
 
     @Override
-    public void send(OtpTransaction otpTransaction) {
-        String to = otpTransaction.recipient();
+    public void send(OneTimePasswordTransaction oneTimePasswordTransaction) {
+        String to = oneTimePasswordTransaction.recipient();
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             Context context = new Context();
-            context.setVariable("code", otpTransaction.otpCode());
+            context.setVariable("code", oneTimePasswordTransaction.otpCode());
             context.setVariable("expirationMinutes", expirationMinutes);
             String htmlContent = templateEngine.process("otp-email-template", context);
 
@@ -51,8 +51,8 @@ public class EmailOtpClient implements OtpClient {
     }
 
     @Override
-    public CompletableFuture<Void> sendAsync(OtpTransaction otpTransaction) {
-        return CompletableFuture.runAsync(() -> send(otpTransaction), executor);
+    public CompletableFuture<Void> sendAsync(OneTimePasswordTransaction oneTimePasswordTransaction) {
+        return CompletableFuture.runAsync(() -> send(oneTimePasswordTransaction), executor);
     }
 
     @Override

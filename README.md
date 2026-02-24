@@ -50,7 +50,7 @@ This service provides secure OTP generation and validation with support for mult
 public class SMSOtpClient implements OtpClient {
 
     @Override
-    public void send(Otp otpTransaction) {
+    public void send(Otp oneTimePasswordTransaction) {
         // Your implementation here        
     }
 }
@@ -58,7 +58,7 @@ public class SMSOtpClient implements OtpClient {
 public class WhatsAppOtpClient implements OtpClient {
 
     @Override
-    public void send(Otp otpTransaction) {
+    public void send(Otp oneTimePasswordTransaction) {
         // implementation        
     }
 }

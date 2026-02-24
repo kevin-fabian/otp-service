@@ -1,11 +1,11 @@
 package com.fabiankevin.app.persistence;
 
-import com.fabiankevin.app.models.OtpTransaction;
+import com.fabiankevin.app.models.OneTimePasswordTransaction;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
 import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.models.enums.OtpStatus;
-import com.fabiankevin.app.persistence.entities.OtpTransactionEntity;
-import com.fabiankevin.app.persistence.jpa.JpaOtpRepository;
+import com.fabiankevin.app.persistence.entities.OneTimePasswordTransactionEntity;
+import com.fabiankevin.app.persistence.jpa.JpaOneTimePasswordRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,26 +23,26 @@ import java.util.UUID;
 
 @DataJpaTest
 @ActiveProfiles("test")
-class DefaultOtpTransactionRepositoryTest {
+class DefaultOneTimePasswordTransactionRepositoryTest {
     @Autowired
     private OtpTransactionRepository otpTransactionRepository;
     @Autowired
-    private JpaOtpRepository jpaOtpRepository;
+    private JpaOneTimePasswordRepository jpaOneTimePasswordRepository;
 
-    private OtpTransaction mockedOtpTransaction;
+    private OneTimePasswordTransaction mockedOneTimePasswordTransaction;
 
     @TestConfiguration
     static class BeanConfiguration {
         @Bean
-        public OtpTransactionRepository defaultOtpRepository(JpaOtpRepository jpaOtpRepository) {
-            return new DefaultOtpTransactionRepository(jpaOtpRepository);
+        public OtpTransactionRepository defaultOtpRepository(JpaOneTimePasswordRepository jpaOneTimePasswordRepository) {
+            return new DefaultOtpTransactionRepository(jpaOneTimePasswordRepository);
         }
     }
 
     @BeforeEach
     void setup() {
         OffsetDateTime now = OffsetDateTime.now();
-        mockedOtpTransaction = OtpTransaction.builder()
+        mockedOneTimePasswordTransaction = OneTimePasswordTransaction.builder()
                 .purpose(OtpPurpose.LOGIN)
                 .deliveryMethod(DeliveryMethod.SMS)
                 .recipient("test@test.com")
@@ -58,13 +58,13 @@ class DefaultOtpTransactionRepositoryTest {
 
     @Test
     void saveAndFlush_givenValidOtp_thenShouldSave() {
-        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
+        OneTimePasswordTransaction savedOneTimePasswordTransaction = otpTransactionRepository.saveAndFlush(mockedOneTimePasswordTransaction);
 
-        OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findById(savedOtpTransaction.id()).get();
+        OneTimePasswordTransactionEntity oneTimePasswordTransactionEntity = jpaOneTimePasswordRepository.findById(savedOneTimePasswordTransaction.id()).get();
 
-        Assertions.assertThat(savedOtpTransaction)
+        Assertions.assertThat(savedOneTimePasswordTransaction)
                 .usingRecursiveComparison()
-                .isEqualTo(otpTransactionEntity.toModel());
+                .isEqualTo(oneTimePasswordTransactionEntity.toModel());
     }
 
     @Test
@@ -75,50 +75,50 @@ class DefaultOtpTransactionRepositoryTest {
 
     @Test
     void retrieveById_givenExistingId_thenShouldReturnOtp() {
-        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
+        OneTimePasswordTransaction savedOneTimePasswordTransaction = otpTransactionRepository.saveAndFlush(mockedOneTimePasswordTransaction);
 
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveById(savedOtpTransaction.id());
+        Optional<OneTimePasswordTransaction> retrievedOtp = otpTransactionRepository.retrieveById(savedOneTimePasswordTransaction.id());
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
                 .usingRecursiveComparison()
-                .isEqualTo(savedOtpTransaction);
+                .isEqualTo(savedOneTimePasswordTransaction);
     }
 
     @Test
     void retrieveById_givenNonExistingId_thenShouldReturnEmpty() {
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveById(UUID.randomUUID());
+        Optional<OneTimePasswordTransaction> retrievedOtp = otpTransactionRepository.retrieveById(UUID.randomUUID());
 
         Assertions.assertThat(retrievedOtp).isNotPresent();
     }
 
     @Test
     void retrieveByRecipient_givenExpiredOtp_thenShouldReturnEmpty() {
-        mockedOtpTransaction = mockedOtpTransaction.toBuilder()
+        mockedOneTimePasswordTransaction = mockedOneTimePasswordTransaction.toBuilder()
                 .expiresAt(OffsetDateTime.now().minusMinutes(1))
                 .build();
-        otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
+        otpTransactionRepository.saveAndFlush(mockedOneTimePasswordTransaction);
 
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipient(mockedOtpTransaction.recipient());
+        Optional<OneTimePasswordTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipient(mockedOneTimePasswordTransaction.recipient());
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
     void retrieveRecipient_thenShouldReturnEmpty() {
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipient("nonexistent@test.com");
+        Optional<OneTimePasswordTransaction> retrievedOtp = otpTransactionRepository.retrieveByRecipient("nonexistent@test.com");
 
         Assertions.assertThat(retrievedOtp).isEmpty();
     }
 
     @Test
     void save_givenValidOtp_thenShouldSaveAndReturnSavedEntity() {
-        OtpTransaction savedOtpTransaction = otpTransactionRepository.save(mockedOtpTransaction);
+        OneTimePasswordTransaction savedOneTimePasswordTransaction = otpTransactionRepository.save(mockedOneTimePasswordTransaction);
 
-        OtpTransactionEntity otpTransactionEntity = jpaOtpRepository.findById(savedOtpTransaction.id()).get();
-        Assertions.assertThat(otpTransactionEntity.toModel())
+        OneTimePasswordTransactionEntity oneTimePasswordTransactionEntity = jpaOneTimePasswordRepository.findById(savedOneTimePasswordTransaction.id()).get();
+        Assertions.assertThat(oneTimePasswordTransactionEntity.toModel())
                 .usingRecursiveComparison()
-                .isEqualTo(savedOtpTransaction);
+                .isEqualTo(savedOneTimePasswordTransaction);
     }
 
     @Test
@@ -130,27 +130,27 @@ class DefaultOtpTransactionRepositoryTest {
 
     @Test
     void retrieveByRecipientAndStatusInAndNotExpired_givenMatchingStatus_thenShouldReturnOtp() {
-        OtpTransaction savedOtpTransaction = otpTransactionRepository.saveAndFlush(mockedOtpTransaction);
+        OneTimePasswordTransaction savedOneTimePasswordTransaction = otpTransactionRepository.saveAndFlush(mockedOneTimePasswordTransaction);
 
-        Optional<OtpTransaction> retrievedOtp = otpTransactionRepository
+        Optional<OneTimePasswordTransaction> retrievedOtp = otpTransactionRepository
                 .retrieveByRecipientAndStatus(
-                        mockedOtpTransaction.recipient(),
+                        mockedOneTimePasswordTransaction.recipient(),
                         List.of(OtpStatus.NEW)
                 );
 
         Assertions.assertThat(retrievedOtp).isPresent();
         Assertions.assertThat(retrievedOtp.get())
                 .usingRecursiveComparison()
-                .isEqualTo(savedOtpTransaction);
+                .isEqualTo(savedOneTimePasswordTransaction);
     }
 
     @Test
     void retrieveByRecipientAndStatusInAndNotExpired_givenNonMatchingStatusOrExpired_thenShouldReturnEmpty() {
-        otpTransactionRepository.saveAndFlush(mockedOtpTransaction.withStatus(OtpStatus.USED));
+        otpTransactionRepository.saveAndFlush(mockedOneTimePasswordTransaction.withStatus(OtpStatus.USED));
 
-        Optional<OtpTransaction> retrievedOtpStatus = otpTransactionRepository
+        Optional<OneTimePasswordTransaction> retrievedOtpStatus = otpTransactionRepository
                 .retrieveByRecipientAndStatus(
-                        mockedOtpTransaction.recipient(),
+                        mockedOneTimePasswordTransaction.recipient(),
                         List.of(OtpStatus.NEW, OtpStatus.SENT, OtpStatus.VERIFIED)
                 );
         Assertions.assertThat(retrievedOtpStatus).isEmpty();

@@ -1,6 +1,6 @@
 package com.fabiankevin.app.services.otp;
 
-import com.fabiankevin.app.clients.OtpClient;
+import com.fabiankevin.app.clients.NotificationClient;
 import com.fabiankevin.app.exceptions.InvalidOtpException;
 import com.fabiankevin.app.exceptions.OtpNotFoundException;
 import com.fabiankevin.app.models.enums.DeliveryMethod;
@@ -12,11 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 
 @Slf4j
-public class AutotestOtpService extends DefaultOtpService {
+public class AutotestOneTimePasswordService extends DefaultOneTimePasswordService {
     private final OtpTransactionRepository otpTransactionRepository;
 
-    public AutotestOtpService(OtpTransactionRepository otpTransactionRepository, Map<DeliveryMethod, OtpClient> otpClientMap, OtpGenerator otpGenerator, OtpProperties properties) {
-        super(otpTransactionRepository, otpClientMap, otpGenerator, properties);
+    public AutotestOneTimePasswordService(OtpTransactionRepository otpTransactionRepository, Map<DeliveryMethod, NotificationClient> otpClientMap, OneTimePasswordGenerator oneTimePasswordGenerator, OtpProperties properties) {
+        super(otpTransactionRepository, otpClientMap, oneTimePasswordGenerator, properties);
         this.otpTransactionRepository = otpTransactionRepository;
     }
 
