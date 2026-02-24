@@ -8,6 +8,13 @@ spring:
       hibernate:
         format_sql: true
 
+logging:
+  level:
+    com.github.fabiankevin: DEBUG
+    com.fabiankevin.app: DEBUG
+    org:springframework:security: DEBUG
+    org.springframework.web.client.RestClient: DEBUG
+
 management:
   tracing:
     enabled: false

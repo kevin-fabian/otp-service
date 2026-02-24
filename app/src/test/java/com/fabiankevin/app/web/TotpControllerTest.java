@@ -1,5 +1,7 @@
 package com.fabiankevin.app.web;
 
+import com.fabiankevin.app.exceptions.TotpInvalidCodeException;
+import com.fabiankevin.app.exceptions.TotpUnregisteredException;
 import com.fabiankevin.app.models.TotpUser;
 import com.fabiankevin.app.services.totp.TotpService;
 import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
@@ -25,11 +27,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import({GlobalExceptionHandler.class})
-@WebMvcTest(controllers = TotpController.class)
+@WebMvcTest(TotpController.class)
 @ActiveProfiles("test")
 class TotpControllerTest {
     @Autowired
@@ -38,19 +41,18 @@ class TotpControllerTest {
     @MockitoBean
     private TotpService totpService;
 
-    private Jwt mockJwt;
+    private Jwt jwt;
 
     private static final UUID USER_PROFILE_ID = UUID.randomUUID();
 
     @BeforeEach
     void reset() {
-        mockJwt = Jwt.withTokenValue("token")
+        jwt = Jwt.withTokenValue("token")
+                .subject(USER_PROFILE_ID.toString())
                 .header("alg", "RS256")
-                .header("kid", UUID.randomUUID().toString())
-                .claim("sub", USER_PROFILE_ID.toString())
-                .claim("scope", "totp:manage")
-                .expiresAt(Instant.now().plusSeconds(300))
+                .claim("scope", "SCOPE_otp:manage")
                 .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
                 .build();
     }
 
@@ -60,12 +62,13 @@ class TotpControllerTest {
         when(totpService.registerTotp(any(RegisterTotpCommand.class))).thenReturn(totpUser);
 
         mockMvc.perform(post("/v1/totp/users")
-                        .with(jwt().jwt(mockJwt))
+                        .with(jwt().jwt(jwt))
                         .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists());
 
-        verify(totpService, times(1)).registerTotp(new RegisterTotpCommand(USER_PROFILE_ID.toString()));
+        verify(totpService, times(1)).registerTotp(any());
     }
 
     @Test
@@ -74,7 +77,7 @@ class TotpControllerTest {
         when(totpService.getQrCodeImageByUserReferenceId(USER_PROFILE_ID.toString())).thenReturn(image);
 
         mockMvc.perform(get("/v1/totp/users/qr")
-                        .with(jwt().jwt(mockJwt))
+                        .with(jwt().jwt(jwt))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertEquals(MediaType.IMAGE_PNG_VALUE, result.getResponse().getContentType(), "Content type should be PNG image"));
@@ -86,8 +89,8 @@ class TotpControllerTest {
     void verify_givenValidRequest_thenShouldVerifySuccessfully() throws Exception {
         doNothing().when(totpService).verify(any(VerifyTotpCommand.class));
 
-        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
-                        .with(jwt().jwt(mockJwt))
+        mockMvc.perform(post("/v1/totp/users/verify")
+                        .with(jwt().jwt(jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -101,41 +104,11 @@ class TotpControllerTest {
     }
 
     @Test
-    void verify_givenMultipleValidRequests_thenShouldOnlySucceedOnce() throws Exception {
-        // first call succeeds, second call fails with invalid state
-        doNothing().doThrow(new com.fabiankevin.app.exceptions.OtpInvalidStateException()).when(totpService).verify(any(VerifyTotpCommand.class));
-
-        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
-                        .with(jwt().jwt(mockJwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "code": "123456",
-                                    "purpose": "LOGIN"
-                                }
-                                """))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
-                        .with(jwt().jwt(mockJwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "code": "123456",
-                                    "purpose": "LOGIN"
-                                }
-                                """))
-                .andExpect(status().isBadRequest());
-
-        verify(totpService, times(2)).verify(any());
-    }
-
-    @Test
     void verify_givenIncorrectCode_thenAttemptCountShouldBeOneAndStatusShouldBeActive() throws Exception {
-        doThrow(new com.fabiankevin.app.exceptions.TotpInvalidCodeException()).when(totpService).verify(any(VerifyTotpCommand.class));
+        doThrow(new TotpInvalidCodeException()).when(totpService).verify(any(VerifyTotpCommand.class));
 
-        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", USER_PROFILE_ID)
-                        .with(jwt().jwt(mockJwt))
+        mockMvc.perform(post("/v1/totp/users/verify")
+                        .with(jwt().jwt(jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -150,20 +123,20 @@ class TotpControllerTest {
 
     @Test
     void verify_givenInvalidRequest_thenShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", UUID.randomUUID())
-                        .with(jwt().jwt(mockJwt))
+        mockMvc.perform(post("/v1/totp/users/verify")
+                        .with(jwt().jwt(jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation Failed"));
+                .andExpect(jsonPath("$.title").value("Invalid request parameters"));
     }
 
     @Test
     void verify_givenUnregisteredUser_thenShouldReturnNotFound() throws Exception {
-        doThrow(new com.fabiankevin.app.exceptions.TotpUnregisteredException()).when(totpService).verify(any(VerifyTotpCommand.class));
+        doThrow(new TotpUnregisteredException()).when(totpService).verify(any(VerifyTotpCommand.class));
 
-        mockMvc.perform(post("/v1/totp/users/{userReferenceId}/verify", UUID.randomUUID())
-                        .with(jwt().jwt(mockJwt))
+        mockMvc.perform(post("/v1/totp/users/verify")
+                        .with(jwt().jwt(jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

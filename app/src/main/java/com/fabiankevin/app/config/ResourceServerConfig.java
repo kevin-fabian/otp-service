@@ -1,12 +1,9 @@
 package com.fabiankevin.app.config;
 
-import com.github.fabiankevin.lemon.web.dto.ApiErrorResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
@@ -30,7 +28,8 @@ public class ResourceServerConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             JwtAuthenticationConverter jwtAuthenticationConverter,
-            AuthenticationEntryPoint defaultInvalidTokenAuthenticationEntryPoint) {
+            AuthenticationEntryPoint defaultInvalidTokenAuthenticationEntryPoint,
+            AccessDeniedHandler defaultInvalidTokenAccessDeniedHandler) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/v1/otps/**").hasAnyAuthority("SCOPE_otp:read", "SCOPE_otp:manage", "ROLE_USER", "ROLE_ADMIN")
@@ -44,14 +43,7 @@ public class ResourceServerConfig {
                 .oauth2ResourceServer(
                         oauth2 -> oauth2
                                 .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter))
-                                .accessDeniedHandler((request, response, _) -> {
-                                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                                    ApiErrorResponse errorResponse = new ApiErrorResponse();
-                                    errorResponse.setTitle("Forbidden");
-                                    errorResponse.setDetails("Insufficient permissions to access this resource");
-                                    response.getWriter().write(jsonMapper.writeValueAsString(errorResponse));
-                                })
+                                .accessDeniedHandler(defaultInvalidTokenAccessDeniedHandler)
                                 .authenticationEntryPoint(defaultInvalidTokenAuthenticationEntryPoint));
         return http.build();
     }

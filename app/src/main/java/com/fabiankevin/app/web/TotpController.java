@@ -1,15 +1,15 @@
 package com.fabiankevin.app.web;
 
 import com.fabiankevin.app.models.TotpUser;
+import com.fabiankevin.app.models.enums.OtpPurpose;
 import com.fabiankevin.app.services.totp.TotpService;
 import com.fabiankevin.app.services.totp.commands.RegisterTotpCommand;
 import com.fabiankevin.app.services.totp.commands.VerifyTotpCommand;
 import com.fabiankevin.app.web.dtos.TotpResponse;
-import com.fabiankevin.app.web.dtos.VerifyOtpRequest;
+import com.fabiankevin.app.web.dtos.VerifyTotpRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,17 +29,8 @@ public class TotpController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register a user to Time-based One-Time Password (TOTP)",
-            description = "Registers a new TOTP user based from JWT",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Created - Successfully registered a user to TOTP service",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = TotpResponse.class))),
-                    @ApiResponse(responseCode = "400", description = "Bad Request - User input is invalid"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
-            })
-    public TotpResponse register(@AuthenticationPrincipal Jwt jwt) {
-        TotpUser totpUser = totpService.registerTotp(new RegisterTotpCommand(jwt.getSubject()));
+    public TotpResponse register(JwtAuthenticationToken jwtAuthenticationToken) {
+        TotpUser totpUser = totpService.registerTotp(new RegisterTotpCommand(jwtAuthenticationToken.getName()));
         return new TotpResponse(totpUser.id());
     }
 
@@ -58,7 +50,7 @@ public class TotpController {
                 .body(totpService.getQrCodeImageByUserReferenceId(jwt.getSubject()));
     }
 
-    @PostMapping("/{userReferenceId}/verify")
+    @PostMapping("/verify")
     @Operation(summary = "Verify TOTP",
             description = "Verifies the provided TOTP code.",
             responses = {
@@ -68,13 +60,13 @@ public class TotpController {
                     @ApiResponse(responseCode = "500", description = "Internal server error - An error occurred on the server")
             })
     public void verify(
-            @Parameter(description = "User reference Id")
-            @PathVariable String userReferenceId,
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "TOTP verification request")
-            @Valid @RequestBody VerifyOtpRequest request) {
+            @Valid @RequestBody VerifyTotpRequest request) {
         totpService.verify(VerifyTotpCommand.builder()
-                        .userReferenceId(userReferenceId)
+                        .userReferenceId(jwt.getSubject())
                         .code(request.code())
+                        .purpose(OtpPurpose.LOGIN)
                 .build());
     }
 }
